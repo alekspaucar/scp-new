@@ -1,0 +1,107 @@
+.planning-view .planning-toolbar { display: flex; flex-wrap: wrap; align-items: end; gap: 12px; }
+.planning-view .planning-toolbar label { display: flex; flex-direction: column; gap: 6px; font-size: 12px; }
+.planning-view input, .planning-view select { max-width: 100%; border: 1px solid #bac7df; border-radius: 10px; padding: 9px 12px; background: var(--background); color: var(--foreground); }
+.planning-view .planning-panel { padding: 20px; min-width: 0; }
+.planning-view .planning-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.planning-view .planning-actions { gap: 12px; margin: 14px 0; }
+.planning-view .mrp-layout { align-items: start; }
+.planning-view .result-stack { align-self: start; }
+.planning-view .result-card { padding: 23px; }
+.planning-view .result-card strong { font-size: 40px; }
+.planning-view .planning-panel > h3 { margin-bottom: 14px; font-size: 15px; font-weight: 600; }
+.planning-view .planning-panel > .planning-toolbar { margin-bottom: 14px; }
+.planning-view .planning-table caption { color: var(--ink); }
+.planning-view .planning-machine { border-bottom: 1px solid var(--line); }
+.planning-view .planning-table { width: 100%; border-collapse: collapse; font-size: 12px; text-align: left; }
+.planning-view .planning-table th, .planning-view .planning-table td { padding: 12px; border-bottom: 1px solid rgba(135,150,180,.22); vertical-align: top; }
+.planning-view .planning-table th { white-space: nowrap; font-weight: 600; }
+.planning-view .planning-table td { min-width: 100px; }
+.planning-view .planning-table caption { text-align: left; padding: 12px; font-weight: 600; }
+.planning-view .planning-table input[type=checkbox] { min-width: 18px; min-height: 18px; }
+.planning-view .planning-note { font-size: 12px; line-height: 1.7; margin: 12px 0; }
+.planning-view .planning-warning { padding: 14px; border-radius: 12px; background: #fff1d9; color: #795719; font-size: 12px; line-height: 1.7; }
+.planning-view .planning-warning ul { list-style: disc; padding-left: 20px; }
+.planning-view .planning-empty { padding: 20px; }
+.planning-view .planning-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.planning-view .planning-details { margin-top: 16px; padding-top: 12px; border-top: 1px solid rgba(135,150,180,.22); }
+.planning-view .planning-details summary { cursor: pointer; font-size: 14px; font-weight: 600; padding: 8px 0; }
+.planning-view .planning-values { display: grid; grid-template-columns: repeat(auto-fit,minmax(160px,1fr)); gap: 12px; margin: 12px 0; }
+.planning-view .planning-values dt { font-size: 11px; opacity: .8; }
+.planning-view .planning-values dd { font-size: 14px; margin-top: 4px; overflow-wrap: anywhere; }
+.planning-view .planning-queue { display: grid; grid-template-columns: repeat(auto-fit,minmax(250px,1fr)); gap: 12px; padding: 12px 0; }
+.planning-view .planning-order { padding: 14px; border: 1px solid rgba(135,150,180,.3); border-radius: 12px; font-size: 12px; overflow-wrap: anywhere; }
+.planning-view .planning-order p { margin: 6px 0; }
+.planning-view [draggable=true] { cursor: grab; }
+.planning-view .planning-drop { border: 2px dashed #8294dc; border-radius: 12px; padding: 14px; }
+.planning-view .planning-scroll { overflow-x: auto; max-width: 100%; }
+.planning-view .planning-axis { position: relative; height: 52px; border-bottom: 1px solid rgba(135,150,180,.4); }
+.planning-view .planning-axis span { position: absolute; font-size: 11px; white-space: nowrap; top: 6px; padding-left: 3px; }
+.planning-view .planning-machine { padding-top: 14px; border-bottom: 1px solid rgba(135,150,180,.25); }
+.planning-view .planning-machine h3 { position: sticky; left: 0; width: max-content; max-width: 90vw; padding: 8px; font-size: 13px; }
+.planning-view .planning-track { position: relative; min-height: 38px; background-image: linear-gradient(to right,var(--line) 1px,transparent 1px); }
+.planning-view .planning-bar { position: absolute; top: 4px; height: 30px; min-width: 0; display: flex; align-items: center; overflow: hidden; white-space: nowrap; border: 1px solid var(--accent); border-radius: 5px; background: color-mix(in srgb, var(--accent) 14%, var(--panel-solid)); color: var(--ink); font-size: 11px; text-align: left; }
+.planning-view .planning-bar span { padding: 0 6px; overflow: hidden; text-overflow: ellipsis; }
+.planning-view .planning-now { position: absolute; top: 0; bottom: 0; width: 2px; background: #dc7f8d; pointer-events: none; }
+.planning-view .planning-inline-error { color: #ad304c; font-size: 12px; }
+.planning-editor { display: grid; gap: 14px; margin-top: 20px; }
+.planning-editor label { display: grid; gap: 6px; font-size: 12px; }
+.planning-editor input, .planning-editor select { height: 44px; border: 1px solid var(--line); border-radius: 10px; padding: 10px; background: var(--field); color: var(--ink); }
+.planning-editor .planning-actions { display: flex; flex-wrap: wrap; gap: 8px; justify-content: end; }
+.planning-editor button { min-width: 44px; min-height: 44px; }
+.planning-editor .planning-unassign { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border-top: 1px solid var(--line); padding-top: 14px; }
+.planning-editor .planning-unassign p, .planning-editor > .subtle { font-size: 12px; line-height: 1.6; overflow-wrap: anywhere; }
+.planning-agenda-view.planning-view { gap: 16px; color: var(--ink); }
+.planning-agenda-view .planning-panel { padding: 14px 16px; }
+.planning-agenda-view button, .planning-agenda-view select { min-width: 44px; min-height: 44px; }
+.planning-agenda-view button:focus-visible, .planning-agenda-view summary:focus-visible, .planning-agenda-view .planning-scroll:focus-visible, .planning-editor button:focus-visible, .planning-editor input:focus-visible, .planning-editor select:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.planning-agenda-view .planning-agenda { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+.planning-agenda-view .planning-machine-agenda, .planning-agenda-view .planning-fold-panel { min-width: 0; border: 1px solid var(--line); border-radius: 12px; background: var(--panel-solid); }
+.planning-agenda-view [data-drop-ready=true] { border-color: var(--accent); outline: 2px dashed var(--accent); outline-offset: 2px; background: color-mix(in srgb, var(--accent) 9%, var(--panel-solid)); }
+.planning-agenda-view .planning-agenda-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; padding: 12px 14px; border-bottom: 1px solid var(--line); }
+.planning-agenda-view .planning-agenda-heading h3 { font-size: 14px; line-height: 1.5; font-weight: 600; overflow-wrap: anywhere; }
+.planning-agenda-view .planning-count { flex-shrink: 0; color: var(--muted); font-size: 12px; font-weight: 500; font-variant-numeric: tabular-nums; }
+.planning-agenda-view .planning-reservations { list-style: none; margin: 0; padding: 0; }
+.planning-agenda-view .planning-reservation { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); }
+.planning-agenda-view .planning-reservation:last-child { border-bottom: none; }
+.planning-agenda-view .planning-reservation-body { min-width: 0; }
+.planning-agenda-view .planning-reservation-heading { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; font-size: 12px; line-height: 1.6; }
+.planning-agenda-view .planning-reservation-heading strong { flex-shrink: 0; font-weight: 600; }
+.planning-agenda-view .planning-client { min-width: 0; overflow-wrap: anywhere; font-size: 13px; }
+.planning-agenda-view .planning-reservation-meta { display: grid; gap: 3px; margin-top: 3px; color: var(--muted); font-size: 12px; line-height: 1.6; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.planning-agenda-view .planning-reservation-footer { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.planning-agenda-view .planning-reservation .status-pill { font-size: 11px; line-height: 1.4; padding: 2px 6px; }
+.planning-agenda-view .planning-row-action { padding: 10px; }
+.planning-agenda-view .planning-agenda-empty { padding: 14px; color: var(--muted); font-size: 12px; line-height: 1.6; }
+.planning-agenda-view .planning-fold > summary { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; min-height: 52px; padding: 12px 14px; color: var(--ink); cursor: pointer; font-size: 13px; line-height: 1.6; font-weight: 600; list-style: none; border-radius: 12px; }
+.planning-agenda-view .planning-fold > summary::-webkit-details-marker { display: none; }
+.planning-agenda-view .planning-fold > summary::after { content: '›'; margin-left: auto; flex-shrink: 0; font-size: 22px; line-height: 1; color: var(--accent); }
+.planning-agenda-view .planning-fold[open] > summary { border-bottom: 1px solid var(--line); border-radius: 12px 12px 0 0; }
+.planning-agenda-view .planning-fold[open] > summary::after { transform: rotate(90deg); }
+.planning-agenda-view .planning-fold-hint { color: var(--muted); font-size: 12px; font-weight: 400; }
+.planning-agenda-view .planning-timeline-content { min-width: 0; padding: 12px 14px 14px; }
+.planning-agenda-view .planning-toolbar { margin-bottom: 10px; align-items: center; }
+.planning-agenda-view .planning-toolbar .planning-note { flex: 1 1 200px; margin: 0; }
+.planning-agenda-view .planning-scroll { border: 1px solid var(--line); border-radius: 8px; }
+.planning-agenda-view .planning-axis { border-bottom-color: var(--line); color: var(--muted); }
+.planning-agenda-view .planning-machine { padding-top: 4px; border-bottom-color: var(--line); }
+.planning-agenda-view .planning-machine:last-child { border-bottom: none; }
+.planning-agenda-view .planning-machine h3 { padding: 6px 8px; color: var(--ink); background: var(--panel-solid); font-size: 12px; }
+.planning-agenda-view .planning-track > .planning-note { position: sticky; left: 8px; width: max-content; margin: 0; padding: 8px; }
+.planning-agenda-view .planning-machine > .planning-inline-error { position: sticky; left: 8px; width: fit-content; max-width: min(480px, 80vw); padding: 6px 8px; }
+.planning-agenda-view .planning-agenda-help > summary { min-height: 44px; display: flex; align-items: center; padding: 8px 0; }
+.planning-agenda-view .planning-agenda-help .planning-note { margin: 0; max-width: 80ch; }
+.dark-mode .planning-view input, .dark-mode .planning-view select, .dark-mode .planning-editor input, .dark-mode .planning-editor select { background: #1e293b; color: #e7edf8; }
+.dark-mode .planning-view .planning-warning { background: #493b25; color: #f4d89f; }
+.dark-mode .planning-view .planning-inline-error, body.theme-dark .planning-view .planning-inline-error { color: #ffb9ca; }
+@media (max-width: 1100px) { .planning-agenda-view .planning-agenda { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 640px) { .planning-view .planning-panel { padding: 14px; } .planning-view .planning-toolbar label { width: 100%; } }
+@media (max-width: 640px) {
+  .planning-agenda-view .planning-agenda { gap: 10px; }
+  .planning-agenda-view .planning-agenda-heading, .planning-agenda-view .planning-fold > summary { padding: 10px 12px; }
+  .planning-agenda-view .planning-reservation { padding: 10px 12px; gap: 8px; }
+  .planning-agenda-view .planning-timeline-content { padding: 10px; }
+  .planning-agenda-view .planning-fold-hint { display: none; }
+  .planning-agenda-view .planning-toolbar select, .planning-editor label input:not([type=checkbox]):not([type=radio]):not([type=file]), .planning-editor label select { font-size: 16px; }
+  .planning-editor .planning-actions { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .planning-editor .planning-actions button { min-width: 0; }
+}

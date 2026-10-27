@@ -1,0 +1,811 @@
+FFF....FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF.FFFFFFFFF                         [100%]
+=================================== FAILURES ===================================
+_____ test_deleted_highest_id_cookie_cannot_authenticate_replacement_admin _____
+tests/test_critical_corrections.py:42: in test_deleted_highest_id_cookie_cannot_authenticate_replacement_admin
+    assert old_client.get('/api/sesion').status_code == 401
+E   AssertionError: assert 200 == 401
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+E    +    where <WrapperTestResponse streamed [200 OK]> = get('/api/sesion')
+E    +      where get = <FlaskClient <Flask 'app'>>.get
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_______________ test_password_change_invalidates_existing_cookie _______________
+tests/test_critical_corrections.py:50: in test_password_change_invalidates_existing_cookie
+    assert old_client.get('/api/sesion').status_code == 401
+E   AssertionError: assert 200 == 401
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+E    +    where <WrapperTestResponse streamed [200 OK]> = get('/api/sesion')
+E    +      where get = <FlaskClient <Flask 'app'>>.get
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_______ test_legacy_and_malformed_identity_tokens_are_unauthorized[1_0] ________
+tests/test_critical_corrections.py:60: in test_legacy_and_malformed_identity_tokens_are_unauthorized
+    assert client.get('/api/sesion').status_code == 401
+E   AssertionError: assert 200 == 401
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+E    +    where <WrapperTestResponse streamed [200 OK]> = get('/api/sesion')
+E    +      where get = <FlaskClient <Flask 'app'>>.get
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_______ test_legacy_and_malformed_identity_tokens_are_unauthorized[1_1] ________
+tests/test_critical_corrections.py:60: in test_legacy_and_malformed_identity_tokens_are_unauthorized
+    assert client.get('/api/sesion').status_code == 401
+E   AssertionError: assert 200 == 401
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+E    +    where <WrapperTestResponse streamed [200 OK]> = get('/api/sesion')
+E    +      where get = <FlaskClient <Flask 'app'>>.get
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_______ test_stale_order_header_preserves_new_item_delivery_and_shortage _______
+tests/test_critical_corrections.py:75: in test_stale_order_header_preserves_new_item_delivery_and_shortage
+    assert response.status_code == 409, response.json
+E   AssertionError: {'mensaje': 'Pedido actualizado', 'pedido': {'cliente': 'CLIENTE TEST', 'estado': 'En Cola', 'fecha_emision': '24/10/2026 21:35', 'fecha_entrega': '2027-01-01T10:00', ...}}
+E   assert 200 == 409
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+________ test_stale_material_header_cannot_restore_stock_after_movement ________
+tests/test_critical_corrections.py:90: in test_stale_material_header_cannot_restore_stock_after_movement
+    assert response.status_code == 409, response.json
+E   AssertionError: {'material': {'acabado': None, 'ancho_material_cm': None, 'cantidad_ml': None, 'capacidad': None, ...}, 'mensaje': 'Material actualizado'}
+E   assert 200 == 409
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[missing-428-materiales] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'material': {'acabado': None, 'ancho_material_cm': None, 'cantidad_ml': None, 'capacidad': None, ...}, 'mensaje': 'Material actualizado'}
+E   assert 200 == 428
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[missing-428-pedidos] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'mensaje': 'Pedido actualizado', 'pedido': {'cliente': 'CLIENTE TEST', 'estado': 'En Cola', 'fecha_emision': '24/10/2026 21:35', 'fecha_entrega': '2026-12-01T12:00', ...}}
+E   assert 200 == 428
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[None-400-materiales] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'material': {'acabado': None, 'ancho_material_cm': None, 'cantidad_ml': None, 'capacidad': None, ...}, 'mensaje': 'Material actualizado'}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[None-400-pedidos] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'mensaje': 'Pedido actualizado', 'pedido': {'cliente': 'CLIENTE TEST', 'estado': 'En Cola', 'fecha_emision': '24/10/2026 21:35', 'fecha_entrega': '2026-12-01T12:00', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[True-400-materiales] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'material': {'acabado': None, 'ancho_material_cm': None, 'cantidad_ml': None, 'capacidad': None, ...}, 'mensaje': 'Material actualizado'}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[True-400-pedidos] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'mensaje': 'Pedido actualizado', 'pedido': {'cliente': 'CLIENTE TEST', 'estado': 'En Cola', 'fecha_emision': '24/10/2026 21:35', 'fecha_entrega': '2026-12-01T12:00', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[1-400-materiales] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'material': {'acabado': None, 'ancho_material_cm': None, 'cantidad_ml': None, 'capacidad': None, ...}, 'mensaje': 'Material actualizado'}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[1-400-pedidos] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'mensaje': 'Pedido actualizado', 'pedido': {'cliente': 'CLIENTE TEST', 'estado': 'En Cola', 'fecha_emision': '24/10/2026 21:35', 'fecha_entrega': '2026-12-01T12:00', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[0-400-materiales] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'material': {'acabado': None, 'ancho_material_cm': None, 'cantidad_ml': None, 'capacidad': None, ...}, 'mensaje': 'Material actualizado'}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[0-400-pedidos] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'mensaje': 'Pedido actualizado', 'pedido': {'cliente': 'CLIENTE TEST', 'estado': 'En Cola', 'fecha_emision': '24/10/2026 21:35', 'fecha_entrega': '2026-12-01T12:00', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[1.0-400-materiales] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'material': {'acabado': None, 'ancho_material_cm': None, 'cantidad_ml': None, 'capacidad': None, ...}, 'mensaje': 'Material actualizado'}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[1.0-400-pedidos] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'mensaje': 'Pedido actualizado', 'pedido': {'cliente': 'CLIENTE TEST', 'estado': 'En Cola', 'fecha_emision': '24/10/2026 21:35', 'fecha_entrega': '2026-12-01T12:00', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[999-409-materiales] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'material': {'acabado': None, 'ancho_material_cm': None, 'cantidad_ml': None, 'capacidad': None, ...}, 'mensaje': 'Material actualizado'}
+E   assert 200 == 409
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_header_revision_precondition_is_enforced_without_mutation[999-409-pedidos] _
+tests/test_critical_corrections.py:105: in test_header_revision_precondition_is_enforced_without_mutation
+    assert response.status_code == status, response.json
+E   AssertionError: {'mensaje': 'Pedido actualizado', 'pedido': {'cliente': 'CLIENTE TEST', 'estado': 'En Cola', 'fecha_emision': '24/10/2026 21:35', 'fecha_entrega': '2026-12-01T12:00', ...}}
+E   assert 200 == 409
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+__ test_fresh_header_edit_returns_new_revision_and_rejects_replay[materiales] __
+tests/test_critical_corrections.py:112: in test_fresh_header_edit_returns_new_revision_and_rejects_replay
+    assert type(original.get('revision')) is int
+E   AssertionError: assert <class 'NoneType'> is int
+E    +  where <class 'NoneType'> = type(None)
+E    +    where None = <built-in method get of dict object at 0x10fd49380>('revision')
+E    +      where <built-in method get of dict object at 0x10fd49380> = {'acabado': None, 'ancho_material_cm': None, 'cantidad_ml': None, 'capacidad': None, ...}.get
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+___ test_fresh_header_edit_returns_new_revision_and_rejects_replay[pedidos] ____
+tests/test_critical_corrections.py:112: in test_fresh_header_edit_returns_new_revision_and_rejects_replay
+    assert type(original.get('revision')) is int
+E   AssertionError: assert <class 'NoneType'> is int
+E    +  where <class 'NoneType'> = type(None)
+E    +    where None = <built-in method get of dict object at 0x10fe30500>('revision')
+E    +      where <built-in method get of dict object at 0x10fe30500> = {'cliente': 'CLIENTE TEST', 'estado': 'En Cola', 'fecha_emision': '24/10/2026 21:35', 'fecha_entrega': '2026-12-01T12:00', ...}.get
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+______________ test_each_child_mutation_invalidates_order_header _______________
+tests/test_critical_corrections.py:137: in test_each_child_mutation_invalidates_order_header
+    mutate('put', item_path + '/estado', {'estado': 'listo'})
+tests/test_critical_corrections.py:133: in mutate
+    assert current.get('revision', 1) > before.get('revision', 1), url
+E   AssertionError: /api/pedidos/1/items/1/estado
+E   assert 1 > 1
+E    +  where 1 = <built-in method get of dict object at 0x10ff06100>('revision', 1)
+E    +    where <built-in method get of dict object at 0x10ff06100> = {'cliente': 'CLIENTE TEST', 'estado': 'En Cola', 'fecha_emision': '24/10/2026 21:35', 'fecha_entrega': '2026-12-01T12:00', ...}.get
+E    +  and   1 = <built-in method get of dict object at 0x10febf480>('revision', 1)
+E    +    where <built-in method get of dict object at 0x10febf480> = {'cliente': 'CLIENTE TEST', 'estado': 'En Cola', 'fecha_emision': '24/10/2026 21:35', 'fecha_entrega': '2026-12-01T12:00', ...}.get
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_independent_orm_sessions_cannot_overwrite_committed_version[materiales] _
+tests/test_critical_corrections.py:159: in test_independent_orm_sessions_cannot_overwrite_committed_version
+    with pytest.raises(StaleDataError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE StaleDataError
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+__ test_independent_orm_sessions_cannot_overwrite_committed_version[pedidos] ___
+tests/test_critical_corrections.py:159: in test_independent_orm_sessions_cannot_overwrite_committed_version
+    with pytest.raises(StaleDataError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE StaleDataError
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+__________ test_create_user_with_no_access_is_immediately_restricted ___________
+tests/test_critical_corrections.py:171: in test_create_user_with_no_access_is_immediately_restricted
+    assert client.get(path).status_code == 403, path
+E   AssertionError: /api/pedidos
+E   assert 200 == 403
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+E    +    where <WrapperTestResponse streamed [200 OK]> = get('/api/pedidos')
+E    +      where get = <FlaskClient <Flask 'app'>>.get
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+___________ test_bad_permissions_never_create_account[permissions0] ____________
+tests/test_critical_corrections.py:181: in test_bad_permissions_never_create_account
+    assert response.status_code == 400, response.json
+E   AssertionError: {'mensaje': 'Usuario creado', 'usuario': {'id': 2, 'permisos': {'calculadora': 'ver', 'configuracion': 'ninguno', 'inventario': 'ninguno', 'operaciones': 'ninguno', ...}, 'permisos_personalizados': False, 'rol': 'operador', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+___________ test_bad_permissions_never_create_account[permissions1] ____________
+tests/test_critical_corrections.py:181: in test_bad_permissions_never_create_account
+    assert response.status_code == 400, response.json
+E   AssertionError: {'mensaje': 'Usuario creado', 'usuario': {'id': 2, 'permisos': {'calculadora': 'ver', 'configuracion': 'ninguno', 'inventario': 'ninguno', 'operaciones': 'ninguno', ...}, 'permisos_personalizados': False, 'rol': 'operador', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+___________ test_bad_permissions_never_create_account[permissions2] ____________
+tests/test_critical_corrections.py:181: in test_bad_permissions_never_create_account
+    assert response.status_code == 400, response.json
+E   AssertionError: {'mensaje': 'Usuario creado', 'usuario': {'id': 2, 'permisos': {'calculadora': 'ver', 'configuracion': 'ninguno', 'inventario': 'ninguno', 'operaciones': 'ninguno', ...}, 'permisos_personalizados': False, 'rol': 'operador', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+___________ test_bad_permissions_never_create_account[permissions3] ____________
+tests/test_critical_corrections.py:181: in test_bad_permissions_never_create_account
+    assert response.status_code == 400, response.json
+E   AssertionError: {'mensaje': 'Usuario creado', 'usuario': {'id': 2, 'permisos': {'calculadora': 'ver', 'configuracion': 'ninguno', 'inventario': 'ninguno', 'operaciones': 'ninguno', ...}, 'permisos_personalizados': False, 'rol': 'operador', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+___________ test_bad_permissions_never_create_account[permissions4] ____________
+tests/test_critical_corrections.py:181: in test_bad_permissions_never_create_account
+    assert response.status_code == 400, response.json
+E   AssertionError: {'mensaje': 'Usuario creado', 'usuario': {'id': 2, 'permisos': {'calculadora': 'ver', 'configuracion': 'ninguno', 'inventario': 'ninguno', 'operaciones': 'ninguno', ...}, 'permisos_personalizados': False, 'rol': 'operador', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_______________ test_bad_permissions_never_create_account[none] ________________
+tests/test_critical_corrections.py:181: in test_bad_permissions_never_create_account
+    assert response.status_code == 400, response.json
+E   AssertionError: {'mensaje': 'Usuario creado', 'usuario': {'id': 2, 'permisos': {'calculadora': 'ver', 'configuracion': 'ninguno', 'inventario': 'ninguno', 'operaciones': 'ninguno', ...}, 'permisos_personalizados': False, 'rol': 'operador', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_________ test_account_and_permissions_update_are_one_atomic_operation _________
+tests/test_critical_corrections.py:191: in test_account_and_permissions_update_are_one_atomic_operation
+    assert client.get('/api/pedidos').status_code == 403
+E   AssertionError: assert 200 == 403
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+E    +    where <WrapperTestResponse streamed [200 OK]> = get('/api/pedidos')
+E    +      where get = <FlaskClient <Flask 'app'>>.get
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+__________ test_bad_permissions_update_rolls_back_all_account_fields ___________
+tests/test_critical_corrections.py:199: in test_bad_permissions_update_rolls_back_all_account_fields
+    assert response.status_code == 400, response.json
+E   AssertionError: {'mensaje': 'Usuario actualizado', 'usuario': {'id': 2, 'permisos': {'calculadora': 'ver', 'configuracion': 'ninguno', 'inventario': 'ninguno', 'operaciones': 'ninguno', ...}, 'permisos_personalizados': False, 'rol': 'empleado', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_________ test_manager_cannot_silently_ignore_custom_permissions[post] _________
+tests/test_critical_corrections.py:219: in test_manager_cannot_silently_ignore_custom_permissions
+    assert response.status_code == 400, response.json
+E   AssertionError: {'mensaje': 'Usuario creado', 'usuario': {'id': 3, 'permisos': {'calculadora': 'editar', 'configuracion': 'editar', 'inventario': 'editar', 'operaciones': 'editar', ...}, 'permisos_personalizados': False, 'rol': 'admin', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_________ test_manager_cannot_silently_ignore_custom_permissions[put] __________
+tests/test_critical_corrections.py:219: in test_manager_cannot_silently_ignore_custom_permissions
+    assert response.status_code == 400, response.json
+E   AssertionError: {'mensaje': 'Usuario actualizado', 'usuario': {'id': 2, 'permisos': {'calculadora': 'editar', 'configuracion': 'editar', 'inventario': 'editar', 'operaciones': 'editar', ...}, 'permisos_personalizados': False, 'rol': 'admin', ...}}
+E   assert 200 == 400
+E    +  where 200 = <WrapperTestResponse streamed [200 OK]>.status_code
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_invoice_upload_serves_validated_type_inline_with_filename[pdf-None-application/pdf] _
+tests/test_critical_corrections.py:241: in test_invoice_upload_serves_validated_type_inline_with_filename
+    assert response.mimetype == mime
+E   AssertionError: assert 'application/octet-stream' == 'application/pdf'
+E     
+E     - application/pdf
+E     + application/octet-stream
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_invoice_upload_serves_validated_type_inline_with_filename[png-PNG-image/png] _
+tests/test_critical_corrections.py:241: in test_invoice_upload_serves_validated_type_inline_with_filename
+    assert response.mimetype == mime
+E   AssertionError: assert 'application/octet-stream' == 'image/png'
+E     
+E     - image/png
+E     + application/octet-stream
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_invoice_upload_serves_validated_type_inline_with_filename[jpg-JPEG-image/jpeg] _
+tests/test_critical_corrections.py:241: in test_invoice_upload_serves_validated_type_inline_with_filename
+    assert response.mimetype == mime
+E   AssertionError: assert 'application/octet-stream' == 'image/jpeg'
+E     
+E     - image/jpeg
+E     + application/octet-stream
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_invoice_upload_serves_validated_type_inline_with_filename[jpeg-JPEG-image/jpeg] _
+tests/test_critical_corrections.py:241: in test_invoice_upload_serves_validated_type_inline_with_filename
+    assert response.mimetype == mime
+E   AssertionError: assert 'application/octet-stream' == 'image/jpeg'
+E     
+E     - image/jpeg
+E     + application/octet-stream
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_invoice_upload_serves_validated_type_inline_with_filename[webp-WEBP-image/webp] _
+tests/test_critical_corrections.py:241: in test_invoice_upload_serves_validated_type_inline_with_filename
+    assert response.mimetype == mime
+E   AssertionError: assert 'application/octet-stream' == 'image/webp'
+E     
+E     - image/webp
+E     + application/octet-stream
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+______ test_revision_migration_is_additive_idempotent_and_preserves_data _______
+tests/test_critical_corrections.py:269: in test_revision_migration_is_additive_idempotent_and_preserves_data
+    assert 'revision' in {row[1] for row in connection.execute(text(f'PRAGMA table_info({table})'))}
+E   AssertionError: assert 'revision' in {'acabado', 'ancho_material_cm', 'cantidad_ml', 'capacidad', 'categoria', 'clasificacion', ...}
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+----------------------------- Captured stdout call -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_______________ test_concurrent_header_requests_have_one_winner ________________
+tests/test_critical_corrections.py:294: in test_concurrent_header_requests_have_one_winner
+    assert sorted(pool.map(update, [1, 2])) == [200, 409]
+E   assert [200, 200] == [200, 409]
+E     
+E     At index 1 diff: 200 != 409
+E     Use -v to get more diff
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+=============================== warnings summary ===============================
+tests/test_critical_corrections.py: 11 warnings
+  /private/tmp/sgp-nueva-hVmGDG/backend/.venv/lib/python3.14/site-packages/flask_sqlalchemy/query.py:30: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    rv = self.get(ident)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_critical_corrections.py::test_deleted_highest_id_cookie_cannot_authenticate_replacement_admin
+FAILED tests/test_critical_corrections.py::test_password_change_invalidates_existing_cookie
+FAILED tests/test_critical_corrections.py::test_legacy_and_malformed_identity_tokens_are_unauthorized[1_0]
+FAILED tests/test_critical_corrections.py::test_legacy_and_malformed_identity_tokens_are_unauthorized[1_1]
+FAILED tests/test_critical_corrections.py::test_stale_order_header_preserves_new_item_delivery_and_shortage
+FAILED tests/test_critical_corrections.py::test_stale_material_header_cannot_restore_stock_after_movement
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[missing-428-materiales]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[missing-428-pedidos]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[None-400-materiales]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[None-400-pedidos]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[True-400-materiales]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[True-400-pedidos]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[1-400-materiales]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[1-400-pedidos]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[0-400-materiales]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[0-400-pedidos]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[1.0-400-materiales]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[1.0-400-pedidos]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[999-409-materiales]
+FAILED tests/test_critical_corrections.py::test_header_revision_precondition_is_enforced_without_mutation[999-409-pedidos]
+FAILED tests/test_critical_corrections.py::test_fresh_header_edit_returns_new_revision_and_rejects_replay[materiales]
+FAILED tests/test_critical_corrections.py::test_fresh_header_edit_returns_new_revision_and_rejects_replay[pedidos]
+FAILED tests/test_critical_corrections.py::test_each_child_mutation_invalidates_order_header
+FAILED tests/test_critical_corrections.py::test_independent_orm_sessions_cannot_overwrite_committed_version[materiales]
+FAILED tests/test_critical_corrections.py::test_independent_orm_sessions_cannot_overwrite_committed_version[pedidos]
+FAILED tests/test_critical_corrections.py::test_create_user_with_no_access_is_immediately_restricted
+FAILED tests/test_critical_corrections.py::test_bad_permissions_never_create_account[permissions0]
+FAILED tests/test_critical_corrections.py::test_bad_permissions_never_create_account[permissions1]
+FAILED tests/test_critical_corrections.py::test_bad_permissions_never_create_account[permissions2]
+FAILED tests/test_critical_corrections.py::test_bad_permissions_never_create_account[permissions3]
+FAILED tests/test_critical_corrections.py::test_bad_permissions_never_create_account[permissions4]
+FAILED tests/test_critical_corrections.py::test_bad_permissions_never_create_account[none]
+FAILED tests/test_critical_corrections.py::test_account_and_permissions_update_are_one_atomic_operation
+FAILED tests/test_critical_corrections.py::test_bad_permissions_update_rolls_back_all_account_fields
+FAILED tests/test_critical_corrections.py::test_manager_cannot_silently_ignore_custom_permissions[post]
+FAILED tests/test_critical_corrections.py::test_manager_cannot_silently_ignore_custom_permissions[put]
+FAILED tests/test_critical_corrections.py::test_invoice_upload_serves_validated_type_inline_with_filename[pdf-None-application/pdf]
+FAILED tests/test_critical_corrections.py::test_invoice_upload_serves_validated_type_inline_with_filename[png-PNG-image/png]
+FAILED tests/test_critical_corrections.py::test_invoice_upload_serves_validated_type_inline_with_filename[jpg-JPEG-image/jpeg]
+FAILED tests/test_critical_corrections.py::test_invoice_upload_serves_validated_type_inline_with_filename[jpeg-JPEG-image/jpeg]
+FAILED tests/test_critical_corrections.py::test_invoice_upload_serves_validated_type_inline_with_filename[webp-WEBP-image/webp]
+FAILED tests/test_critical_corrections.py::test_revision_migration_is_additive_idempotent_and_preserves_data
+FAILED tests/test_critical_corrections.py::test_concurrent_header_requests_have_one_winner
+43 failed, 5 passed, 11 warnings in 4.91s

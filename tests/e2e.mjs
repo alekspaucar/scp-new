@@ -1,0 +1,228 @@
+import assert from 'node:assert/strict'
+import { chromium } from 'playwright'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
+import { randomUUID } from 'node:crypto'
+import { dirname, join } from 'node:path'
+import { fileURLToPath } from 'node:url'
+
+const root = dirname(dirname(fileURLToPath(import.meta.url)))
+const base = process.env.SGP_NUEVA_TEST_URL || 'http://127.0.0.1:3001'
+const target = new URL(base)
+assert.ok(['localhost', '127.0.0.1'].includes(target.hostname) && ['3001', '3100'].includes(target.port), 'Las pruebas solo se ejecutan en los puertos locales reservados de pruebas')
+const output = join(root, 'artifacts'), credentialsPath = join(root, 'backend/instance/.e2e-login.json')
+await mkdir(output, { recursive: true })
+const browser = await chromium.launch({ headless: true, ...(process.env.SGP_NUEVA_BROWSER_PATH ? { executablePath: process.env.SGP_NUEVA_BROWSER_PATH } : {}) })
+const context = await browser.newContext({ baseURL: base, viewport: { width: 1600, height: 1050 } })
+const page = await context.newPage(), errors = [], checked = []
+page.on('pageerror', error => errors.push(error.message))
+page.on('dialog', dialog => void dialog.accept())
+const responseData = async response => {
+  const body = await response.json()
+  assert.ok(response.ok(), `${response.status()} ${JSON.stringify(body)}`)
+  return body
+}
+const get = path => context.request.get(`/api/${path}`).then(responseData)
+const post = (path, data) => context.request.post(`/api/${path}`, { data }).then(responseData)
+const put = (path, data) => context.request.put(`/api/${path}`, { data }).then(responseData)
+const changed = (fragment, method) => page.waitForResponse(response => new URL(response.url()).pathname.startsWith('/api/') && response.url().includes(fragment) && response.request().method() === method && response.status() < 400)
+const clickMutation = async (locator, fragment, method = 'PUT') => { const response = changed(fragment, method); await locator.click(); await response }
+const heading = async text => page.getByRole('heading', { level: 2, name: text, exact: true }).waitFor()
+const evidence = async name => { await page.waitForLoadState('networkidle'); await page.screenshot({ path: join(output, `${name}.png`), fullPage: true }); checked.push(name) }
+
+try {
+  assert.equal((await get('health')).proyecto, 'sgp-nueva-interfaz', 'Nunca mutar un servicio ajeno')
+  const installation = await get('instalacion')
+  let credentials
+  if (installation.requiere_configuracion) {
+    credentials = { username: 'verificacion-local', password: `${randomUUID()}-Aa1` }
+    await page.goto('/')
+    await page.getByRole('heading', { name: 'Prepara tu espacio de trabajo' }).waitFor()
+    await page.getByLabel('Usuario', { exact: true }).fill(credentials.username)
+    await page.getByLabel('Contraseña', { exact: true }).fill(credentials.password)
+    await clickMutation(page.getByRole('button', { name: 'Crear mi acceso', exact: true }), 'instalacion', 'POST')
+    await writeFile(credentialsPath, JSON.stringify(credentials), { mode: 0o600 })
+  } else {
+    credentials = JSON.parse(await readFile(credentialsPath, 'utf8'))
+    await page.goto('/')
+    await page.getByLabel('Usuario', { exact: true }).fill(credentials.username)
+    await page.getByLabel('Contraseña', { exact: true }).fill(credentials.password)
+    await clickMutation(page.getByRole('button', { name: 'Ingresar', exact: true }), 'login', 'POST')
+  }
+  checked.push('instalacion-y-login')
+  const suffix = Date.now().toString().slice(-8), customer = `CLIENTE QA ${suffix}`, sku = `QA-${suffix}`, productCode = `ET-${suffix}`
+  await post('clientes', { codigo: `CLI-${suffix}`, nombre: customer })
+  const material = (await post('materiales', { codigo_barras: sku, nombre: `Vinil verificación ${suffix}`, categoria: 'Materia Prima', tipo: 'Sustrato', proveedor: 'PROVEEDOR QA', stock_actual: 20, stock_minimo: 2, metros_por_rollo: 10, ancho_material_cm: 150 })).material
+  const product = (await post('catalogo', { codigo: productCode, cliente: customer, descripcion: 'ETIQUETA DE VERIFICACIÓN', cant_etiquetas_plancha: 10, cant_planchas: 10, cant_rollos: 1, cant_etiquetas_rollo: 100, largo_plancha_impresa: 100, largo_rollo: 10, ancho_rollo: 1.5, material_id: material.id, tipo_codigo: 'normal', tiempo_base_minutos: 0.5 })).producto
+  assert.ok(product?.id)
+
+  await page.goto('/pedidos'); await heading('Pedidos')
+  await page.getByRole('button', { name: 'Nuevo pedido', exact: true }).click()
+  await page.getByRole('dialog').waitFor()
+  await page.getByLabel(/^Cliente/).fill(customer)
+  await page.getByLabel('Orden de compra (opcional)', { exact: true }).fill(`OC-QA-${suffix}`)
+  const due = new Date(Date.now() + 86400000 - 5 * 3600000).toISOString().slice(0, 16)
+  await page.getByLabel('Fecha y hora de entrega (Ecuador)', { exact: true }).fill(due)
+  await page.getByLabel('Código para escanear', { exact: true }).fill(productCode)
+  await page.getByLabel('Descripción', { exact: true }).fill('ETIQUETA DE VERIFICACIÓN')
+  await page.getByLabel('Cantidad', { exact: true }).last().fill('100')
+  await page.getByRole('button', { name: 'Revisar pedido', exact: true }).click()
+  await page.getByRole('alert').filter({ hasText: /escaneo pendiente/ }).waitFor()
+  assert.equal(await page.getByRole('button', { name: 'Confirmar y guardar', exact: true }).count(), 0, 'Un escaneo no agregado no debe perderse al guardar')
+  await page.getByLabel('Código para escanear', { exact: true }).fill('')
+  await page.getByLabel('Código del ítem 1', { exact: true }).fill(productCode)
+  await page.getByRole('button', { name: 'Revisar pedido', exact: true }).click()
+  await clickMutation(page.getByRole('button', { name: 'Confirmar y guardar', exact: true }), 'pedidos', 'POST')
+  await page.getByRole('dialog').waitFor({ state: 'hidden' })
+  let order = (await get('pedidos')).find(order => order.orden_compra === `OC-QA-${suffix}`)
+  assert.ok(order, 'El formulario debe persistir el pedido en el servidor')
+  assert.equal(order.items[0].codigo, productCode, 'El código escrito debe conservarse al guardar')
+  await page.reload(); await heading('Pedidos')
+  const orderRow = page.getByRole('row').filter({ hasText: `OC-QA-${suffix}` })
+  await orderRow.waitFor()
+  await orderRow.getByRole('button', { name: 'Detalle', exact: true }).click()
+  await clickMutation(page.getByRole('button', { name: 'Iniciar producción', exact: true }), `pedidos/${order.id}/estado`)
+  await clickMutation(page.getByRole('button', { name: 'Activar modo parcial', exact: true }), 'modo-parcial', 'PATCH')
+  await page.getByLabel('Cantidad de salida', { exact: true }).fill('20')
+  await page.getByLabel('Observación de entrega', { exact: true }).fill('Verificación de la interfaz nueva')
+  await clickMutation(page.getByRole('button', { name: 'Registrar entrega parcial', exact: true }), '/entregas', 'POST')
+  order = await get(`pedidos/${order.id}`)
+  assert.equal(order.items[0].cantidad_entregada_total, 20)
+  assert.equal(order.progreso, 20)
+  await page.getByRole('button', { name: 'Reportar faltante', exact: true }).click()
+  await page.getByLabel('Cantidad faltante', { exact: true }).fill('5')
+  await page.getByLabel('Motivo o causa', { exact: true }).fill('Merma de prueba independiente')
+  await clickMutation(page.getByRole('dialog').last().getByRole('button', { name: 'Reportar faltante', exact: true }), '/faltantes', 'POST')
+  order = await get(`pedidos/${order.id}`)
+  assert.equal(order.tiene_faltantes_activos, true)
+  checked.push('pedido-persistente-parciales-y-faltante')
+  await page.getByRole('button', { name: 'Cerrar ventana', exact: true }).last().click()
+
+  await page.goto('/gantt'); await heading('Planificador Gantt')
+  const queueCard = page.locator('.planning-order').filter({ hasText: customer }).first()
+  await queueCard.getByRole('button', { name: 'Asignar / reprogramar', exact: true }).click()
+  await page.getByLabel('Inicio', { exact: true }).fill(due)
+  await page.getByLabel('Duración (minutos)', { exact: true }).fill('30')
+  await clickMutation(page.getByRole('button', { name: 'Guardar reserva', exact: true }), 'produccion/asignar-manual')
+  assert.equal((await get(`pedidos/${order.id}`)).maquina_asignada, 'M1')
+  await clickMutation(page.locator('.planning-order').filter({ hasText: customer }).first().getByRole('button', { name: 'Volver a cola', exact: true }), 'produccion/asignar-manual')
+  assert.equal((await get(`pedidos/${order.id}`)).maquina_asignada, null)
+  assert.equal((await get(`pedidos/${order.id}`)).items[0].cantidad_entregada_total, 20)
+  checked.push('gantt-reserva-y-regreso-sin-perder-parcial')
+
+  await page.goto('/operaciones'); await heading('Operaciones de bodega')
+  await page.getByLabel('Código de barras / SKU', { exact: true }).first().fill(sku)
+  const entry = changed('movimientos', 'POST')
+  await page.getByLabel('Código de barras / SKU', { exact: true }).first().press('Enter'); await entry
+  assert.equal((await get('materiales')).find(value => value.id === material.id).stock_actual, 21)
+  await page.getByRole('button', { name: 'Salida', exact: true }).click()
+  await page.getByLabel('Código de barras / SKU', { exact: true }).last().fill(sku)
+  await page.getByLabel(/^Cantidad/).fill('2')
+  await clickMutation(page.getByRole('button', { name: 'Registrar salida', exact: true }), 'movimientos', 'POST')
+  assert.equal((await get('materiales')).find(value => value.id === material.id).stock_actual, 19)
+  checked.push('scanner-y-salida-manual')
+
+  await page.goto('/calculadora'); await heading('Calculadora MRP')
+  await page.getByLabel('Producto', { exact: true }).selectOption(String(product.id))
+  await page.getByLabel('Cantidad de etiquetas', { exact: true }).fill('100')
+  await clickMutation(page.getByRole('button', { name: 'Calcular consumo', exact: true }), 'calculadora/planchas', 'POST')
+  await page.getByText('Planchas totales', { exact: true }).waitFor()
+  const calculation = await post('calculadora/planchas', { producto_id: product.id, cantidad: 100 })
+  assert.equal(calculation.planchas_totales, 10); assert.equal(calculation.metros_cuadrados, 15)
+  checked.push('calculadora-con-catalogo')
+
+  const batchOrder = (await post('pedidos', { cliente: customer, orden_compra: `MRP-QA-${suffix}`, fecha_entrega: due, items: [{ codigo: productCode, descripcion: 'ETIQUETA DE VERIFICACIÓN', cantidad: 200 }] })).pedido
+  await page.goto('/reportes'); await heading('Reportes')
+  await page.getByRole('tab', { name: 'MRP por lote', exact: true }).click()
+  await page.getByRole('checkbox', { name: `Seleccionar pedido ${batchOrder.id} de ${customer}`, exact: true }).check()
+  const mrpResponse = changed('reportes/mrp-lote', 'POST')
+  await page.getByRole('button', { name: 'Calcular MRP del lote', exact: true }).click()
+  const mrp = await (await mrpResponse).json()
+  assert.equal(mrp.totales.total_planchas, 20)
+  assert.equal(mrp.materiales_bodega[0].rollos_necesarios, 2)
+  await page.getByRole('heading', { name: 'Lote calculado', exact: true }).waitFor()
+  await page.getByRole('checkbox', { name: `Seleccionar pedido ${batchOrder.id} de ${customer}`, exact: true }).uncheck()
+  assert.equal(await page.getByRole('heading', { name: 'Lote calculado', exact: true }).count(), 0, 'Cambiar la selección invalida el cálculo')
+  await page.getByRole('tab', { name: 'Pedidos', exact: true }).click()
+  await page.getByLabel('Cliente (contiene)', { exact: true }).fill(customer)
+  await clickMutation(page.getByRole('button', { name: 'Consultar', exact: true }), 'reportes/pedidos', 'GET')
+  await page.getByLabel('Cliente (contiene)', { exact: true }).fill('FILTRO SIN CONSULTAR')
+  const pdfDownload = page.waitForEvent('download'), reportResponse = changed('reportes/pedidos/pdf', 'POST')
+  await page.getByRole('button', { name: 'Descargar PDF', exact: true }).click()
+  const reportPdf = await reportResponse
+  assert.equal(reportPdf.request().postDataJSON().cliente, customer, 'Exportar usa filtros consultados y no borradores')
+  await pdfDownload
+  checked.push('mrp-lote-y-reportes-con-filtros-consultados')
+
+  await page.goto('/preacabados')
+  await page.getByRole('button', { name: 'Confirmar reposición', exact: true }).first().waitFor()
+  await clickMutation(page.getByRole('button', { name: 'Confirmar reposición', exact: true }).first(), '/resolver')
+  assert.equal((await get(`pedidos/${order.id}`)).tiene_faltantes_activos, false)
+  checked.push('reposicion-de-faltante')
+
+  await page.goto('/pedidos'); await heading('Pedidos')
+  await page.getByRole('row').filter({ hasText: `OC-QA-${suffix}` }).getByRole('button', { name: 'Detalle', exact: true }).click()
+  await clickMutation(page.getByRole('button', { name: 'Terminar pedido', exact: true }), `pedidos/${order.id}/estado`)
+  const pdfResponse = await context.request.get(`/api/pedidos/${order.id}/pdf`)
+  assert.equal(pdfResponse.status(), 200)
+  const pdf = await pdfResponse.body(); assert.ok(pdf.subarray(0, 4).toString() === '%PDF')
+  await page.getByRole('button', { name: 'Facturar / autorizar', exact: true }).click()
+  await page.getByLabel('Factura PDF o imagen', { exact: true }).setInputFiles({ name: 'factura-qa.pdf', mimeType: 'application/pdf', buffer: pdf })
+  await clickMutation(page.getByRole('button', { name: 'Confirmar Facturado', exact: true }), `pedidos/${order.id}/estado`)
+  order = await get(`pedidos/${order.id}`)
+  assert.equal(order.estado, 'Facturado'); assert.ok(order.url_factura)
+  const invoiceResponse = await context.request.get(order.url_factura)
+  assert.equal(invoiceResponse.status(), 200)
+  assert.ok(invoiceResponse.headers()['content-type'].startsWith('application/pdf'), 'La factura debe poder abrirse en el visor PDF')
+  await clickMutation(page.getByRole('button', { name: 'Confirmar entrega', exact: true }), `pedidos/${order.id}/estado`)
+  assert.equal((await get(`pedidos/${order.id}`)).estado, 'Entregado')
+  assert.equal((await get('materiales')).find(value => value.id === material.id).stock_actual, 18)
+  checked.push('factura-pdf-entrega-y-stock')
+  await page.getByRole('button', { name: 'Cerrar ventana', exact: true }).last().click()
+  const excel = await context.request.get('/api/exportar/excel')
+  assert.equal(excel.status(), 200); assert.equal((await excel.body()).subarray(0, 2).toString(), 'PK')
+  checked.push('documentos-y-excel')
+
+  for (const route of ['monitor', 'produccion', 'inventario', 'reportes', 'clientes', 'configuracion']) {
+    await page.goto(`/${route}`)
+    await page.getByRole('heading', { level: 2 }).first().waitFor()
+    await evidence(route)
+  }
+  await page.goto('/monitor')
+  await page.getByRole('button', { name: 'Cambiar a modo oscuro', exact: true }).click()
+  await page.locator('.app-shell.dark-mode').waitFor()
+  await evidence('monitor-oscuro')
+  await page.setViewportSize({ width: 390, height: 844 })
+  await page.getByRole('button', { name: 'Abrir menú', exact: true }).click()
+  await page.getByRole('navigation', { name: 'Navegación principal' }).getByRole('link', { name: 'Inventario', exact: true }).click()
+  await heading('Inventario')
+  assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 2), 'El contenido móvil debe caber en el ancho de la pantalla')
+  await evidence('inventario-movil-oscuro')
+  await page.setViewportSize({ width: 1600, height: 1050 })
+
+  const readonly = { username: `consulta-${suffix}`, password: `${randomUUID()}-Aa1`, rol: 'empleado' }
+  const account = (await post('usuarios', readonly)).usuario
+  const other = await browser.newContext({ baseURL: base }), reader = await other.newPage()
+  await reader.goto('/')
+  await reader.getByLabel('Usuario', { exact: true }).fill(readonly.username)
+  await reader.getByLabel('Contraseña', { exact: true }).fill(readonly.password)
+  await reader.getByRole('button', { name: 'Ingresar', exact: true }).click()
+  await reader.getByRole('navigation', { name: 'Navegación principal' }).waitFor()
+  await reader.goto('/pedidos'); await reader.getByRole('heading', { name: 'Pedidos', exact: true }).waitFor()
+  assert.equal(await reader.getByRole('button', { name: 'Nuevo pedido', exact: true }).count(), 0)
+  assert.equal((await other.request.post('/api/materiales', { data: { codigo_barras: 'FORBIDDEN' } })).status(), 403)
+  await put(`usuarios/${account.id}/permisos`, { permisos: { pedidos: 'ninguno', produccion: 'ninguno', operaciones: 'ninguno', inventario: 'ninguno', reportes: 'ninguno', configuracion: 'ninguno', calculadora: 'ninguno' } })
+  await reader.evaluate(() => window.dispatchEvent(new Event('sgp:session-change')))
+  await reader.getByRole('heading', { name: 'Esta sección no está habilitada para tu cuenta' }).waitFor()
+  assert.equal(await reader.getByRole('link', { name: 'Pedidos', exact: true }).count(), 0)
+  await reader.getByRole('button', { name: 'Cerrar sesión', exact: true }).click()
+  await reader.getByRole('button', { name: 'Ingresar', exact: true }).waitFor()
+  await other.close()
+  checked.push('solo-lectura-revocacion-y-salida')
+  assert.deepEqual(errors, [], 'Sin errores de JavaScript')
+  await writeFile(join(output, 'verificacion.json'), JSON.stringify({ passed: true, checks: checked, javascriptErrors: errors }, null, 2))
+  console.log(JSON.stringify({ passed: true, checks: checked, javascriptErrors: errors }, null, 2))
+} catch (error) {
+  await page.screenshot({ path: join(output, 'error.png'), fullPage: true }).catch(() => {})
+  await writeFile(join(output, 'error.txt'), `${error.stack}\n${await page.locator('body').innerText().catch(() => '')}`)
+  throw error
+} finally { await browser.close() }

@@ -1,0 +1,24 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+________________ test_bootstrap_concurrent_first_user_is_atomic ________________
+backend/tests/test_isolation.py:122: in test_bootstrap_concurrent_first_user_is_atomic
+    assert sorted(pool.map(install, [1, 2])) == [201, 409]
+E   assert [404, 404] == [201, 409]
+E     
+E     At index 0 diff: 404 != 201
+E     Use -v to get more diff
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+[instalación] Configure SGP_INITIAL_ADMIN_PASSWORD para crear la primera cuenta
+=========================== short test summary info ============================
+FAILED backend/tests/test_isolation.py::test_bootstrap_concurrent_first_user_is_atomic
+1 failed in 0.30s

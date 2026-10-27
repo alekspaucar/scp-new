@@ -1,0 +1,41 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+_____________________ test_ignores_inherited_configuration _____________________
+backend/tests/test_isolation.py:21: in test_ignores_inherited_configuration
+    assert app.config['UPLOAD_FOLDER'] == str(storage[1] / 'catalogo')
+E   AssertionError: assert '/private/tmp...oads/catalogo' == '/private/tmp...8f2d/catalogo'
+E     
+E     Skipping 36 identical leading characters in diff, use -v to show
+E     - d/uploads/test-cb980de23f8a4aae9f2a68768a748f2d/catalogo
+E     + d/uploads/catalogo
+----------------------------- Captured stdout call -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_ test_rejects_database_outside_instance[sqlite:///instance/e2e-relative.sqlite3] _
+backend/tests/test_isolation.py:46: in test_rejects_database_outside_instance
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+----------------------------- Captured stdout call -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+=========================== short test summary info ============================
+FAILED backend/tests/test_isolation.py::test_ignores_inherited_configuration
+FAILED backend/tests/test_isolation.py::test_rejects_database_outside_instance[sqlite:///instance/e2e-relative.sqlite3]
+2 failed in 0.39s

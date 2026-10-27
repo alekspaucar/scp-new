@@ -1,0 +1,131 @@
+'use client'
+
+import { useMemo, useState } from 'react'
+import {
+  Activity,
+  AlertTriangle,
+  ArrowRight,
+  BarChart3,
+  Bell,
+  Box,
+  CalendarDays,
+  Check,
+  ClipboardList,
+  Factory,
+  Gauge,
+  Database,
+  Printer,
+  UserCog,
+  LayoutDashboard,
+  Layers3,
+  Menu,
+  PackageCheck,
+  PanelLeftClose,
+  Plus,
+  RefreshCw,
+  Search,
+  Settings2,
+  ShieldCheck,
+  ShoppingCart,
+  Sparkles,
+  Sun,
+  Moon,
+  Truck,
+  Users,
+  X,
+} from 'lucide-react'
+
+type View = 'Monitor' | 'Gantt' | 'Orders' | 'MRP Calculator' | 'Quality Control' | 'Inventory' | 'Settings'
+
+const viewLabels: Record<View, string> = { Monitor: 'Monitor', Gantt: 'Gantt', Orders: 'Pedidos', 'MRP Calculator': 'Calculadora MRP', 'Quality Control': 'Control de calidad', Inventory: 'Inventario', Settings: 'Configuración' }
+
+const navItems: { label: View; icon: typeof Gauge }[] = [
+  { label: 'Monitor', icon: Gauge },
+  { label: 'Gantt', icon: CalendarDays },
+  { label: 'Orders', icon: ClipboardList },
+  { label: 'MRP Calculator', icon: BarChart3 },
+  { label: 'Quality Control', icon: ShieldCheck },
+  { label: 'Inventory', icon: Layers3 },
+]
+
+const kanban = {
+  Queue: [
+    ['Atlas Components', 'ORD-24091', '2 days left', 12, 'amber'],
+    ['Nordwerk GmbH', 'ORD-24096', '3 days left', 8, 'blue'],
+    ['Helix Industrial', 'ORD-24088', '4 days left', 4, 'blue'],
+    ['Vantage Motion', 'ORD-24102', '5 days left', 0, 'blue'],
+  ],
+  Processing: [
+    ['Apex Manufacturing', 'ORD-24077', 'Due today', 68, 'amber'],
+    ['Kern & Sohn', 'ORD-24082', '1 day left', 54, 'blue'],
+    ['MecaNova Group', 'ORD-24073', 'Delayed', 41, 'rose'],
+    ['Orion Precision', 'ORD-24069', '2 days left', 29, 'blue'],
+  ],
+  Done: [
+    ['Stellaris Energy', 'ORD-24061', 'Delivered', 100, 'green'],
+    ['Boreal Systems', 'ORD-24058', 'Delivered', 100, 'green'],
+    ['Ferroline AG', 'ORD-24051', 'Delivered', 100, 'green'],
+    ['Vector Dynamics', 'ORD-24044', 'Delivered', 100, 'green'],
+  ],
+} as const
+
+function GlassCard({ children, className = '' }: { children: React.ReactNode; className?: string }) {
+  return <div className={`glass-panel ${className}`}>{children}</div>
+}
+
+function Metric({ label, value, note, tone }: { label: string; value: string; note: string; tone: string }) {
+  return <GlassCard className="metric-card"><div><p className="eyebrow">{label}</p><p className={`metric-value ${tone}`}>{value}</p></div><span className="metric-note">{note}</span></GlassCard>
+}
+
+function MonitorView() {
+  return <div className="view-stack">
+    <div className="view-heading"><div><p className="eyebrow accent-text">Resumen operativo</p><h2>Flujo de producción</h2><p className="subtle">Estado de los pedidos en tiempo real en toda la planta.</p></div><div className="heading-actions"><button className="icon-button" aria-label="Search"><Search /></button><button className="soft-button">Hoy <ArrowRight className="rotate-90" /></button></div></div>
+    <div className="metrics-grid"><Metric label="Active orders" value="24" note="of 38 total" tone="green" /><Metric label="At risk" value="03" note="needs attention" tone="rose" /><Metric label="Due today" value="07" note="by 18:00" tone="amber" /><Metric label="Completed" value="128" note="this month" tone="blue" /></div>
+    <div className="kanban-grid">{Object.entries(kanban).map(([title, items]) => <section key={title} className="kanban-column"><div className="column-heading"><div><div className="title-line"><span className={`column-dot ${title === 'Queue' ? 'amber' : title === 'Processing' ? 'green' : 'blue'}`} /><h3>{title}</h3><span className="count-badge">{items.length.toString().padStart(2, '0')}</span></div><p className="column-subtitle">{title === 'Queue' ? 'En cola' : title === 'Processing' ? 'En proceso' : 'Terminado'}</p></div><button className="ghost-icon" aria-label={`Add ${title} order`}><Plus /></button></div><div className="card-list">{items.map(([client, id, delivery, progress, tone]) => <GlassCard key={id} className="order-card"><div className="order-top"><div className="order-name"><span className={`status-dot ${tone}`} /><div><strong>{client}</strong><span className="mono">{id}</span></div></div><div className="order-date"><b className={tone}>{delivery}</b><span>Oct {progress === 100 ? '01' : progress > 60 ? '02' : progress > 20 ? '04' : '05'}, 2026</span></div></div><div className="progress-line"><div className={`progress-bar ${tone}`} style={{ width: `${progress}%` }} /><span>{progress}%</span></div></GlassCard>)}</div></section>)}</div>
+  </div>
+}
+
+const jobs = [
+  ['Prensa digital 01', [['08:00', '10:20', '2 h 20 min', 'lavender', 'ORD-24091'], ['10:40', '13:00', '2 h 20 min', 'mint', 'ORD-24096'], ['14:20', '16:40', '2 h 20 min', 'peach', 'ORD-24102']]],
+  ['Prensa offset 02', [['08:40', '11:40', '3 h', 'blue', 'ORD-24077'], ['13:10', '15:10', '2 h', 'lavender', 'ORD-24082']]],
+  ['Cortadora 03', [['09:20', '11:30', '2 h 10 min', 'peach', 'ORD-24073'], ['12:00', '14:50', '2 h 50 min', 'mint', 'ORD-24069']]],
+  ['Acabado 04', [['11:20', '13:50', '2 h 30 min', 'blue', 'ORD-24061'], ['15:30', '17:30', '2 h', 'lavender', 'ORD-24058']]],
+] as const
+
+function GanttView() {
+  const times = ['08:00', '10:00', '12:00', '14:00', '16:00', '18:00']
+  return <div className="view-stack"><div className="view-heading"><div><p className="eyebrow accent-text">Planificación de producción</p><h2>Plan de hoy</h2><p className="subtle">02 de octubre de 2026 · Turno A · 08:00–18:00</p></div><div className="heading-actions"><button className="soft-button"><RefreshCw /> Actualizar plan</button></div></div><GlassCard className="gantt-card"><div className="gantt-help"><strong>Lectura rápida</strong><span>Inicio → fin</span><span>Duración visible en cada pedido</span></div><div className="gantt-header"><span>Máquina / línea</span><div className="timeline-labels">{times.map(t => <span key={t}>{t}</span>)}</div></div>{jobs.map(([machine, tasks]) => <div className="gantt-row" key={machine}><div className="machine-name"><Factory /><strong>{machine}</strong></div><div className="timeline task-stack">{tasks.map(([start, end, duration, tone, id]) => <div key={id} className={`job-block ${tone}`}><div><strong>{id}</strong><span>{duration}</span></div><small>{start} → {end}</small></div>)}</div></div>)}<div className="gantt-footer"><span><i className="legend-dot green" /> En marcha</span><span><i className="legend-dot blue" /> Programado</span><span><i className="legend-dot amber" /> En riesgo</span></div></GlassCard></div>
+}
+
+const orderRows = [['ORD-24091', 'Atlas Components', 'Digital print · 2,400 sheets', 'Oct 04, 2026', 'In production', 'green'], ['ORD-24096', 'Nordwerk GmbH', 'Offset print · 8,000 sheets', 'Oct 05, 2026', 'Queued', 'blue'], ['ORD-24077', 'Apex Manufacturing', 'Packaging · 12,500 units', 'Oct 02, 2026', 'Due today', 'amber'], ['ORD-24073', 'MecaNova Group', 'Labels · 6,200 sheets', 'Oct 01, 2026', 'Delayed', 'rose'], ['ORD-24061', 'Stellaris Energy', 'Brochures · 4,000 sheets', 'Oct 01, 2026', 'Delivered', 'green']]
+
+function OrdersView() {
+  const [open, setOpen] = useState(false)
+  return <div className="view-stack"><div className="view-heading"><div><p className="eyebrow accent-text">Gestión de pedidos</p><h2>Todos los pedidos</h2><p className="subtle">38 pedidos activos en todas las líneas de producción.</p></div><button className="primary-button" onClick={() => setOpen(true)}><Plus /> Nuevo pedido</button></div><GlassCard className="table-card"><div className="table-toolbar"><div className="search-field"><Search /><input aria-label="Search orders" placeholder="Search orders..." /></div><button className="soft-button">All statuses <ArrowRight className="rotate-90" /></button></div><div className="data-table"><div className="data-row table-head"><span>Order</span><span>Customer</span><span>Production</span><span>Delivery</span><span>Status</span><span /></div>{orderRows.map(([id, customer, production, delivery, status, tone]) => <div className="data-row" key={id}><span className="mono strong">{id}</span><span className="strong">{customer}</span><span className="subtle">{production}</span><span className="subtle">{delivery}</span><span><span className={`status-pill ${tone}`}>{status}</span></span><button className="row-arrow" aria-label={`Open ${id}`}><ArrowRight /></button></div>)}</div></GlassCard>{open && <div className="modal-backdrop" onClick={() => setOpen(false)}><div className="modal glass-panel" onClick={e => e.stopPropagation()}><div className="modal-heading"><div><p className="eyebrow accent-text">Order intake</p><h3>Create new order</h3></div><button className="ghost-icon" onClick={() => setOpen(false)} aria-label="Close"><X /></button></div><div className="form-grid"><label>Customer<input placeholder="Company name" /></label><label>Delivery date<input type="date" defaultValue="2026-10-09" /></label><label className="wide">Job description<textarea placeholder="Describe the print job..." rows={3} /></label></div><div className="modal-actions"><button className="soft-button" onClick={() => setOpen(false)}>Cancel</button><button className="primary-button" onClick={() => setOpen(false)}>Create order <ArrowRight /></button></div></div></div>}</div>
+}
+
+function MRPView() {
+  const [width, setWidth] = useState(70)
+  const [height, setHeight] = useState(50)
+  const [quantity, setQuantity] = useState(2400)
+  const sheets = useMemo(() => Math.ceil((width * height * quantity) / (70 * 100) * 1.08), [width, height, quantity])
+  return <div className="view-stack"><div className="view-heading"><div><p className="eyebrow accent-text">Material planning</p><h2>MRP calculator</h2><p className="subtle">Estimate sheet requirements and material waste.</p></div><span className="live-chip"><Sparkles /> Smart estimate</span></div><div className="mrp-layout"><GlassCard className="form-card"><div className="section-title"><div className="icon-tile blue"><Box /></div><div><h3>Job specifications</h3><p className="subtle">Enter the finished dimensions.</p></div></div><div className="form-grid"><label>Width (cm)<input type="number" value={width} onChange={e => setWidth(Number(e.target.value))} /></label><label>Height (cm)<input type="number" value={height} onChange={e => setHeight(Number(e.target.value))} /></label><label className="wide">Quantity<input type="number" value={quantity} onChange={e => setQuantity(Number(e.target.value))} /></label><label className="wide">Material<select defaultValue="Satin 170 gsm"><option>Satin 170 gsm</option><option>Uncoated 120 gsm</option><option>Recycled 150 gsm</option></select></label></div><button className="primary-button full-button">Calculate requirement <ArrowRight /></button></GlassCard><div className="result-stack"><GlassCard className="result-card highlight"><span className="result-icon"><PackageCheck /></span><p className="eyebrow">Total sheets</p><strong>{sheets.toLocaleString()}</strong><span className="result-note">incl. 8% setup allowance</span></GlassCard><GlassCard className="result-card"><span className="result-icon amber-bg"><AlertTriangle /></span><p className="eyebrow">Estimated waste</p><strong>8.0%</strong><span className="result-note">within target threshold</span></GlassCard></div></div></div>
+}
+
+const shortages = [['Satin 170 gsm', 'MAT-0042', '1,200 sheets', 'High'], ['Ink · Process Cyan', 'INK-0018', '2 cartridges', 'Medium'], ['Binding wire · 3:1', 'FIN-0021', '180 units', 'Low'], ['Recycled 150 gsm', 'MAT-0088', '400 sheets', 'Medium']]
+function QualityView() { return <div className="view-stack"><div className="view-heading"><div><p className="eyebrow accent-text">Material exceptions</p><h2>Quality control</h2><p className="subtle">Faltantes e incidencias que requieren atención antes de producir.</p></div><span className="alert-chip"><AlertTriangle /> 4 open issues</span></div><GlassCard className="shortage-card"><div className="shortage-head"><div><h3>Faltantes</h3><p className="subtle">Material shortages detected by the planning engine.</p></div><button className="soft-button"><RefreshCw /> Re-scan</button></div>{shortages.map(([name, id, amount, priority]) => <div className="shortage-row" key={id}><div className="shortage-icon"><AlertTriangle /></div><div className="shortage-name"><strong>{name}</strong><span className="mono">{id}</span></div><span className="amount">{amount}</span><span className={`priority ${priority.toLowerCase()}`}>{priority} priority</span><button className="resolve-button"><Check /> Resolve</button></div>)}</GlassCard></div> }
+
+const stock = [['Satin 170 gsm', 'MAT-0042', 'Paper', '12,400', '15,000', 'green'], ['Uncoated 120 gsm', 'MAT-0011', 'Paper', '4,200', '8,000', 'amber'], ['Process Cyan', 'INK-0018', 'Ink', '24', '40', 'green'], ['Process Magenta', 'INK-0019', 'Ink', '8', '40', 'rose'], ['Binding wire 3:1', 'FIN-0021', 'Finishing', '1,840', '1,000', 'green']]
+function InventoryView() { return <div className="view-stack"><div className="view-heading"><div><p className="eyebrow accent-text">Materiales y suministros</p><h2>Inventario</h2><p className="subtle">Niveles de inventario en tiempo real del almacén.</p></div><button className="primary-button"><Plus /> Añadir material</button></div><div className="inventory-summary"><Metric label="Total SKUs" value="248" note="across 4 zones" tone="blue" /><Metric label="Low stock" value="12" note="needs reorder" tone="amber" /><Metric label="Stock value" value="€84.2k" note="current valuation" tone="green" /></div><GlassCard className="table-card"><div className="table-toolbar"><div className="search-field"><Search /><input aria-label="Search inventory" placeholder="Search materials..." /></div><span className="subtle"><Activity /> Last synced 2 min ago</span></div><div className="data-table inventory-table"><div className="data-row table-head"><span>Material</span><span>SKU</span><span>Category</span><span>On hand</span><span>Reorder point</span><span>Status</span></div>{stock.map(([name, id, category, onHand, reorder, tone]) => <div className="data-row" key={id}><span className="strong"><Box className="inline-icon" />{name}</span><span className="mono">{id}</span><span className="subtle">{category}</span><span className="strong">{tone === 'rose' && <AlertTriangle className="warning-icon" />}{onHand}</span><span className="subtle">{reorder}</span><span className={`status-pill ${tone}`}>{tone === 'rose' ? 'Low stock' : tone === 'amber' ? 'Reorder soon' : 'In stock'}</span></div>)}</div></GlassCard></div> }
+
+function SettingsView() {
+  return <div className="view-stack"><div className="view-heading"><div><p className="eyebrow accent-text">Administración del sistema</p><h2>Configuración</h2><p className="subtle">Conexiones, impresión y usuarios para ampliar PROPRINT.</p></div></div><div className="settings-grid"><GlassCard className="settings-card"><Database /><div><h3>Base de datos de producción</h3><p className="subtle">Pedidos, máquinas, turnos y consumos.</p></div><span className="status-pill amber">Pendiente</span><button className="soft-button">Configurar</button></GlassCard><GlassCard className="settings-card"><Users /><div><h3>Base de datos de clientes</h3><p className="subtle">Empresas, contactos y direcciones.</p></div><span className="status-pill amber">Pendiente</span><button className="soft-button">Configurar</button></GlassCard><GlassCard className="settings-card"><UserCog /><div><h3>Administrar usuarios</h3><p className="subtle">Roles: administrador, producción, calidad y consulta.</p></div><span className="status-pill blue">Planificado</span><button className="soft-button">Gestionar</button></GlassCard><GlassCard className="settings-card"><Printer /><div><h3>Impresora Zebra</h3><p className="subtle">Plantillas ZPL, etiquetas y cola de impresión.</p></div><span className="status-pill blue">Planificado</span><button className="soft-button">Configurar</button></GlassCard></div></div>
+}
+
+export default function Page() {
+  const [activeView, setActiveView] = useState<View>('Monitor')
+  const [collapsed, setCollapsed] = useState(false)
+  const [darkMode, setDarkMode] = useState(false)
+  const view = { Monitor: <MonitorView />, Gantt: <GanttView />, Orders: <OrdersView />, 'MRP Calculator': <MRPView />, 'Quality Control': <QualityView />, Inventory: <InventoryView />, Settings: <SettingsView /> }[activeView]
+  return <main className={`app-shell ${darkMode ? 'dark-mode' : ''}`}><aside className={`sidebar ${collapsed ? 'collapsed' : ''}`}><div className="brand"><div className="brand-mark"><Factory /></div>{!collapsed && <div><strong>PRO<span>PRINT</span></strong><small>Producción inteligente</small></div>}</div><div className="sidebar-section"><p className="sidebar-label">Área de trabajo</p><nav aria-label="Navegación principal">{navItems.map(({ label, icon: Icon }) => <button key={label} onClick={() => setActiveView(label)} className={`nav-item ${activeView === label ? 'active' : ''}`} title={collapsed ? label : undefined}><Icon />{!collapsed && <span>{viewLabels[label]}</span>}{activeView === label && !collapsed && <i />}</button>)}</nav></div><div className="sidebar-section secondary-nav"><button className="nav-item"><ShoppingCart />{!collapsed && <span>Compras</span>}</button><button className="nav-item"><Users />{!collapsed && <span>Clientes</span>}</button><button className={`nav-item ${activeView === 'Settings' ? 'active' : ''}`} onClick={() => setActiveView('Settings')}><Settings2 />{!collapsed && <span>Configuración</span>}{activeView === 'Settings' && !collapsed && <i />}</button></div><div className="sidebar-bottom"><button className="nav-item"><Bell />{!collapsed && <span>Notificaciones</span>}</button>{!collapsed && <div className="profile"><div>JD</div><span><strong>Jordan Davis</strong><small>Jefe de planta</small></span></div>}</div></aside><div className={`main-area ${collapsed ? 'expanded' : ''}`}><header className="topbar"><button className="icon-button mobile-menu"><Menu /></button><button className="icon-button collapse-button" onClick={() => setCollapsed(!collapsed)} aria-label="Alternar barra lateral"><PanelLeftClose /></button><div className="breadcrumb"><span>Planta de producción</span><strong>{viewLabels[activeView]}</strong></div><div className="top-actions"><span className="live-status"><i /> Sincronización activa</span><span className="date-label">Viernes, 02 de octubre de 2026</span><button className="icon-button" onClick={() => setDarkMode(!darkMode)} aria-label={darkMode ? 'Cambiar a modo claro' : 'Cambiar a modo oscuro'}>{darkMode ? <Sun /> : <Moon />}</button><button className="icon-button" aria-label="Notifications"><Bell /><i className="notification-dot" /></button></div></header><div className="page-content">{view}</div><footer className="app-footer"><span>NEXUS//OPS v2.4.1</span><span>Todos los sistemas operativos · Actualizado ahora</span></footer></div></main>
+}

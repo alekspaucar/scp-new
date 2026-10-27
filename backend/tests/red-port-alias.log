@@ -1,0 +1,39 @@
+.....FF..FF                                                              [100%]
+=================================== FAILURES ===================================
+_______ test_run_rejects_invalid_port_without_creating_application[1023] _______
+backend/tests/test_run.py:30: in test_run_rejects_invalid_port_without_creating_application
+    run.main()
+backend/run.py:10: in main
+    create_app().run(host='127.0.0.1', port=port, debug=False, use_reloader=False)
+    ^^^^^^^^^^^^
+backend/tests/test_run.py:27: in unexpected
+    raise AssertionError('Should reject the port before creating the app')
+E   AssertionError: Should reject the port before creating the app
+_______ test_run_rejects_invalid_port_without_creating_application[5001] _______
+backend/tests/test_run.py:30: in test_run_rejects_invalid_port_without_creating_application
+    run.main()
+backend/run.py:10: in main
+    create_app().run(host='127.0.0.1', port=port, debug=False, use_reloader=False)
+    ^^^^^^^^^^^^
+backend/tests/test_run.py:27: in unexpected
+    raise AssertionError('Should reject the port before creating the app')
+E   AssertionError: Should reject the port before creating the app
+______________________ test_uploads_dir_environment_alias ______________________
+backend/tests/test_isolation.py:190: in test_uploads_dir_environment_alias
+    assert Config().UPLOAD_FOLDER == str(storage[1] / 'catalogo')
+E   AssertionError: assert '/private/tmp...oads/catalogo' == '/private/tmp...db85/catalogo'
+E     
+E     Skipping 36 identical leading characters in diff, use -v to show
+E     - d/uploads/test-a3f0bca09d5e4055a0333da921dcdb85/catalogo
+E     + d/uploads/catalogo
+_________________ test_conflicting_upload_aliases_are_rejected _________________
+backend/tests/test_isolation.py:196: in test_conflicting_upload_aliases_are_rejected
+    with pytest.raises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+E   Failed: DID NOT RAISE ValueError
+=========================== short test summary info ============================
+FAILED backend/tests/test_run.py::test_run_rejects_invalid_port_without_creating_application[1023]
+FAILED backend/tests/test_run.py::test_run_rejects_invalid_port_without_creating_application[5001]
+FAILED backend/tests/test_isolation.py::test_uploads_dir_environment_alias - ...
+FAILED backend/tests/test_isolation.py::test_conflicting_upload_aliases_are_rejected
+4 failed, 7 passed in 0.19s

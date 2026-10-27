@@ -1,0 +1,24 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_________________________ test_health_and_json_errors __________________________
+backend/tests/test_isolation.py:76: in test_health_and_json_errors
+    assert client.get('/api/health').json == {'status': 'ok', 'proyecto': 'sgp-nueva-interfaz'}
+E   AssertionError: assert None == {'status': 'ok', 'proyecto': 'sgp-nueva-interfaz'}
+E    +  where None = <WrapperTestResponse streamed [404 NOT FOUND]>.json
+E    +    where <WrapperTestResponse streamed [404 NOT FOUND]> = get('/api/health')
+E    +      where get = <FlaskClient <Flask 'app'>>.get
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+[instalación] Configure SGP_INITIAL_ADMIN_PASSWORD para crear la primera cuenta
+=========================== short test summary info ============================
+FAILED backend/tests/test_isolation.py::test_health_and_json_errors - Asserti...
+1 failed in 0.30s

@@ -1,0 +1,36 @@
+FF                                                                       [100%]
+=================================== FAILURES ===================================
+___________ test_seed_is_opt_in_idempotent_and_does_not_create_users ___________
+backend/tests/test_seed_demo.py:5: in test_seed_is_opt_in_idempotent_and_does_not_create_users
+    from seed_demo import seed_demo
+E   ModuleNotFoundError: No module named 'seed_demo'
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+_____________________ test_seed_cli_requires_explicit_flag _____________________
+backend/tests/test_seed_demo.py:25: in test_seed_cli_requires_explicit_flag
+    from seed_demo import main
+E   ModuleNotFoundError: No module named 'seed_demo'
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+=========================== short test summary info ============================
+FAILED backend/tests/test_seed_demo.py::test_seed_is_opt_in_idempotent_and_does_not_create_users
+FAILED backend/tests/test_seed_demo.py::test_seed_cli_requires_explicit_flag
+2 failed in 0.39s

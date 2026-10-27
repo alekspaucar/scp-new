@@ -1,0 +1,29 @@
+F                                                                        [100%]
+=================================== FAILURES ===================================
+_ test_invoice_optimistic_conflict_rolls_back_and_removes_unreferenced_upload __
+tests/test_critical_corrections.py:320: in test_invoice_optimistic_conflict_rolls_back_and_removes_unreferenced_upload
+    assert list((storage[1] / 'facturas').iterdir()) == []
+E   AssertionError: assert [PosixPath('/...onflict.pdf')] == []
+E     
+E     Left contains one more item: PosixPath('/private/tmp/sgp-nueva-hVmGDG/backend/uploads/test-ad251f355d6f483b8dc13562e640e59e/facturas/factura_1_ecfd98180c6748db82c082df6327d9ec_conflict.pdf')
+E     Use -v to get more diff
+---------------------------- Captured stdout setup -----------------------------
+[migración] materiales.clasificacion poblada: 0 fila(s) actualizada(s)
+[migración] catalogo_productos.imagen_referencia ya existe
+[migración] pedido_items.estado_item/fecha_estado ya existen
+[migración] pedido_items.observacion ya existe
+[migración] pedido_items.modo_entregas_parciales ya existe
+[migración] catalogo_productos.tipo_codigo ya existe
+[migración] clientes_db.logo_filename ya existe
+[migración] entrega_parcial_items ya existe
+[migración] pedido_items.estado_item_previo ya existe
+[migración] pedidos.observacion_retroceso ya existe
+=============================== warnings summary ===============================
+tests/test_critical_corrections.py::test_invoice_optimistic_conflict_rolls_back_and_removes_unreferenced_upload
+  /private/tmp/sgp-nueva-hVmGDG/backend/.venv/lib/python3.14/site-packages/flask_sqlalchemy/query.py:30: LegacyAPIWarning: The Query.get() method is considered legacy as of the 1.x series of SQLAlchemy and becomes a legacy construct in 2.0. The method is now available as Session.get() (deprecated since: 2.0) (Background on SQLAlchemy 2.0 at: https://sqlalche.me/e/b8d9)
+    rv = self.get(ident)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_critical_corrections.py::test_invoice_optimistic_conflict_rolls_back_and_removes_unreferenced_upload
+1 failed, 48 deselected, 1 warning in 0.45s

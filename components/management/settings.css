@@ -1,0 +1,48 @@
+.management-view { min-width: 0; }
+.management-tabs, .management-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+.management-tabs { padding: .65rem; }
+.management-tabs .management-actions { gap: 10px; }
+.management-tabs .soft-button { min-width: 125px; }
+.management-view .management-view .view-heading h2 { font-size: 23px; }
+.management-tabs [aria-current="page"] { background: #6d81df; color: white; }
+.management-view .table-toolbar { align-items: center; }
+.management-table { border-collapse: collapse; width: 100%; min-width: 1120px; font-size: 12px; }
+.management-table th, .management-table td { padding: 14px 16px; border-bottom: 1px solid rgba(148,163,184,.19); text-align: left; vertical-align: top; }
+.management-table th { white-space: nowrap; font-size: 10px; letter-spacing: .07em; color: #8492a9; }
+.management-table td { max-width: 340px; overflow-wrap: anywhere; }
+.management-table td small { display: block; margin-top: .35rem; }
+.management-table input[type="checkbox"] { width: 17px; height: 17px; accent-color: #6d81df; }
+.management-table .management-actions { min-width: 190px; }
+.management-draft { background: rgba(229,175,91,.09); }
+.management-error { color: #c25468; font-size: 12px; white-space: pre-wrap; }
+.management-message, .management-summary { padding: 1rem; }
+.management-summary { display: flex; gap: 1rem; flex-wrap: wrap; font-size: 12px; }
+.management-form { min-width: 0; }
+.management-form fieldset { border: 0; padding: 0; min-width: 0; }
+.management-form fieldset:disabled { opacity: .7; }
+.management-form .form-grid { margin-top: 1rem; }
+.management-form textarea { min-height: 80px; resize: vertical; }
+.management-form .modal-actions { flex-wrap: wrap; }
+.management-form input[type="checkbox"] { width: 17px; height: 17px; }
+.management-check { display: flex; align-items: center; gap: .5rem; margin: 1rem 0; font-size: 12px; }
+.management-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; padding: 1rem 0; }
+.management-preview img { max-width: 200px; max-height: 200px; object-fit: contain; border-radius: .5rem; background: rgba(255,255,255,.7); }
+.management-logo { width: 48px; height: 48px; object-fit: contain; }
+.management-permissions { display: grid; gap: .6rem; margin-top: 1rem; }
+.management-permissions label { display: grid; grid-template-columns: 1fr minmax(140px, 180px); align-items: center; gap: 1rem; font-size: 12px; }
+.management-permissions select { border: 1px solid rgba(148,163,184,.4); border-radius: .65rem; padding: .65rem; color: inherit; background: var(--background); }
+.management-meta { padding: 1.3rem; }
+.management-meta h3 { margin-bottom: .5rem; font-weight: 600; }
+.management-meta dl { display: grid; grid-template-columns: minmax(100px, 1fr) 2fr; gap: .65rem 1rem; font-size: 12px; margin-top: 1rem; }
+.management-meta dd { overflow-wrap: anywhere; }
+.dark-mode .management-permissions select { background: #243044; }
+.dark-mode .management-draft { background: rgba(229,175,91,.07); }
+@media (max-width: 640px) {
+  .management-tabs .soft-button { min-width: 0; }
+  .management-view .management-view .view-heading h2 { font-size: 21px; }
+  .management-actions { gap: 10px; }
+  .management-form .form-grid { grid-template-columns: 1fr; }
+  .management-form .form-grid .wide { grid-column: 1; }
+  .management-meta dl { grid-template-columns: 1fr; }
+  .management-permissions label { grid-template-columns: 1fr; gap: .35rem; }
+}

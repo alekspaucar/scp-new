@@ -1,0 +1,125 @@
+.orders-scope, .orders-form { min-width: 0; --orders-line: var(--line, #cbd5e5); --orders-ink: var(--ink, #34435e); --orders-muted: var(--muted, #74829a); --orders-blue: #6078cc; --orders-amber: #bc7d22; --orders-green: #31936a; --orders-violet: #8770b8; --orders-rose: #c35f75; }
+.orders-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+.orders-actions:empty { display: none; }
+.orders-actions > label { flex: 1 1 150px; min-width: 0; }
+.orders-actions > button { flex-shrink: 0; }
+.orders-toolbar { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; padding: 1rem; }
+.orders-scope label, .orders-form label { display: flex; flex-direction: column; gap: .4rem; font-size: .75rem; }
+.orders-scope input:not([type=checkbox]), .orders-scope select, .orders-scope textarea, .orders-form input:not([type=checkbox]), .orders-form select, .orders-form textarea { min-width: 0; max-width: 100%; border: 1px solid var(--orders-line); border-radius: .7rem; padding: .65rem .8rem; background: var(--field, rgba(255,255,255,.7)); color: var(--orders-ink); font-size: 13px; }
+.orders-form { display: flex; flex-direction: column; gap: 1rem; }
+.orders-form .form-grid { margin-top: 0; }
+.orders-form fieldset { border: 1px solid var(--orders-line); border-radius: .8rem; padding: 1rem; min-width: 0; }
+.orders-form legend { padding: 0 .4rem; font-weight: 600; font-size: .8rem; }
+.orders-form textarea { min-height: 5rem; }
+.orders-scope button, .orders-form button { min-height: 40px; }
+.orders-scope .order-card { min-width: 0; border: 2px solid color-mix(in srgb, var(--orders-status) 50%, var(--orders-line)); border-left: 4px solid var(--orders-status); padding: 1rem; }
+.orders-scope .order-card:hover { transform: none; translate: none; }
+.orders-state-queue { --orders-status: var(--orders-amber); }
+.orders-state-processing { --orders-status: var(--orders-blue); }
+.orders-state-finished { --orders-status: var(--orders-green); }
+.orders-state-invoiced { --orders-status: var(--orders-violet); }
+.orders-state-pickup { --orders-status: var(--orders-violet); }
+.orders-state-delivered { --orders-status: var(--orders-green); }
+.orders-card-button { display: block; width: 100%; text-align: left; border: 0; padding: 0; background: transparent; color: inherit; border-radius: .4rem; }
+.orders-card-button:focus-visible, .orders-scope button:focus-visible, .orders-form button:focus-visible { outline: 2px solid var(--accent, #6177d5); outline-offset: 3px; }
+.orders-scope .order-top { align-items: start; flex-wrap: wrap; gap: .6rem; }
+.orders-scope .order-name { flex: 1 1 130px; }
+.orders-scope .order-name strong { white-space: normal; overflow-wrap: anywhere; font-size: 13px; }
+.orders-scope .kanban-column { min-width: 0; }
+.orders-card-meta { margin-top: .75rem; display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; font-size: .75rem; }
+.orders-card-progress { display: flex; gap: .7rem; align-items: center; margin: .75rem 0; font-size: .75rem; }
+.orders-card-progress progress { width: 100%; height: .45rem; accent-color: var(--orders-status, #6177d5); appearance: none; border: 0; background: transparent; overflow: hidden; border-radius: 999px; }
+.orders-card-progress progress::-webkit-progress-bar { background: var(--orders-line); border-radius: 999px; }
+.orders-card-progress progress::-webkit-progress-value { background: var(--orders-status, #6d81df); border-radius: 999px; }
+.orders-card-progress progress::-moz-progress-bar { background: var(--orders-status, #6d81df); border-radius: 999px; }
+.orders-card-toggle { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: .65rem; font-size: .75rem; font-weight: 600; color: var(--accent, #6177d5); }
+.orders-card-toggle svg { width: 18px; height: 18px; }
+.orders-card-button[aria-expanded=true] .orders-card-toggle svg { transform: rotate(180deg); }
+.orders-card-actions { padding-top: .85rem; margin-top: .85rem; border-top: 1px solid var(--orders-line); }
+.orders-card-content:not([hidden]) { padding-top: .85rem; margin-top: .85rem; border-top: 1px solid var(--orders-line); }
+.orders-panel-pad { padding: 1.2rem; }
+.orders-table { border-collapse: collapse; min-width: 850px; width: 100%; font-size: .8rem; }
+.orders-table th, .orders-table td { text-align: left; padding: .9rem; border-bottom: 1px solid var(--line, #cbd5e5); vertical-align: top; }
+.orders-table th { font-size: .75rem; color: var(--muted, #71809a); }
+.orders-table .orders-actions { min-width: 230px; }
+.orders-table tr[data-order-state='En Cola'], .orders-table tr[data-shortage-state=pending] { --orders-row-status: #bc7d22; }
+.orders-table tr[data-order-state=Procesando] { --orders-row-status: #6078cc; }
+.orders-table tr[data-order-state=Terminado], .orders-table tr[data-order-state=Entregado], .orders-table tr[data-shortage-state=resolved] { --orders-row-status: #31936a; }
+.orders-table tr[data-order-state=Facturado], .orders-table tr[data-order-state='Retiro en Fábrica'] { --orders-row-status: #8770b8; }
+.orders-table tr[data-order-state] > td:first-child, .orders-table tr[data-shortage-state] > td:first-child { box-shadow: inset 4px 0 var(--orders-row-status); }
+.orders-items { display: flex; flex-direction: column; gap: .75rem; min-width: 0; }
+.orders-form .orders-item { padding: 1rem; display: flex; flex-direction: column; gap: .65rem; border: 1px solid var(--orders-line); border-left: 3px solid var(--orders-item-status, var(--orders-amber)); box-shadow: none; }
+.orders-item-pendiente { --orders-item-status: var(--orders-amber); }
+.orders-item-listo { --orders-item-status: var(--orders-green); }
+.orders-item-suspendido { --orders-item-status: var(--orders-rose); }
+.orders-item-entregado_parcial { --orders-item-status: var(--orders-blue); }
+.orders-item-head { display: flex; flex-wrap: wrap; align-items: start; justify-content: space-between; gap: .6rem; }
+.orders-item-title { min-width: 0; flex: 1 1 180px; }
+.orders-item-head h4 { font-size: .85rem; font-weight: 600; line-height: 1.5; overflow-wrap: anywhere; }
+.orders-item-code { color: var(--orders-muted); font-size: .75rem; margin-right: .3rem; }
+.orders-item-title .subtle { margin-top: .2rem; line-height: 1.5; }
+.orders-item-observation { color: var(--orders-ink); font-size: .75rem; line-height: 1.5; overflow-wrap: anywhere; }
+.orders-shortage-alert { color: #916015; font-size: .75rem; font-weight: 600; }
+.orders-item-actions > button { min-width: 64px; }
+.orders-item-form { padding-top: .3rem; }
+.orders-item-form .orders-actions { align-items: end; }
+.orders-item-form .orders-actions > label { flex-basis: 130px; }
+.orders-item-form input[type=number] { width: 100%; }
+.orders-history { margin-top: 0; }
+.orders-history > summary, .orders-order-references > summary { cursor: pointer; font-size: .75rem; line-height: 1.6; font-weight: 600; color: var(--orders-muted); overflow-wrap: anywhere; padding: .3rem 0; }
+.orders-history > summary:focus-visible, .orders-order-references > summary:focus-visible { outline: 2px solid var(--accent, #6177d5); outline-offset: 3px; border-radius: .2rem; }
+.orders-history[open] > summary, .orders-order-references[open] > summary { margin-bottom: .65rem; }
+.orders-history h5 { font-size: .75rem; font-weight: 600; margin-top: .75rem; }
+.orders-history li { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; padding: .6rem 0; border-bottom: 1px solid var(--orders-line); font-size: .75rem; overflow-wrap: anywhere; }
+.orders-order-actions { padding-top: .25rem; }
+.orders-order-references { border-top: 1px solid var(--orders-line); padding-top: .5rem; }
+.orders-detail-inline { gap: .75rem; }
+.orders-detail-inline .orders-item { padding: .7rem; gap: .45rem; background: var(--field, rgba(255,255,255,.6)); }
+.orders-detail-inline .orders-item-head { gap: .35rem; }
+.orders-detail-inline .orders-item-title { flex-basis: 100%; }
+.orders-detail-inline .orders-item-actions > button { flex: 1 1 60px; padding-inline: .6rem; }
+.orders-detail-inline .orders-summary { grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); }
+.orders-note { padding: .85rem 1rem; background: rgba(229,175,91,.14); border: 1px solid rgba(212,157,78,.4); border-radius: .8rem; font-size: .8rem; line-height: 1.6; }
+.orders-summary { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: .9rem; }
+.orders-summary dt { font-size: .75rem; color: var(--orders-muted); }
+.orders-summary dd { overflow-wrap: anywhere; margin-top: .3rem; font-size: .85rem; }
+.orders-progress-ring { display: inline-flex; align-items: center; gap: .45rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.orders-progress-ring svg { width: 26px; height: 26px; flex-shrink: 0; fill: none; stroke-width: 3; }
+.orders-progress-ring .ring-track { stroke: var(--orders-line); }
+.orders-progress-ring .ring-value { stroke: var(--orders-blue); transform: rotate(-90deg); transform-origin: center; stroke-linecap: round; }
+.orders-progress-ring[data-complete=true] .ring-value { stroke: var(--orders-green); }
+.orders-draft-row { display: grid; grid-template-columns: minmax(110px,1fr) minmax(150px,2fr) 100px auto; gap: 12px; align-items: end; margin-bottom: .8rem; }
+.orders-row-control { margin-bottom: 1rem; }
+.orders-row-control > label { flex: 0 0 auto; }
+.orders-row-control input { width: 6rem; }
+.orders-editor-details { font-size: .8rem; }
+.orders-editor-details > summary { cursor: pointer; font-weight: 600; }
+.orders-editor-details > summary:focus-visible { outline: 2px solid var(--accent, #6177d5); outline-offset: 3px; border-radius: .2rem; }
+.orders-editor-details[open] > summary { margin-bottom: .65rem; }
+.orders-capture-tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px; }
+.orders-form .orders-capture-tool { min-height: 56px; justify-content: start; gap: 12px; padding: .8rem 1rem; border: 1px solid color-mix(in srgb, var(--orders-blue) 55%, var(--orders-line)); background: color-mix(in srgb, var(--orders-blue) 9%, var(--panel-solid, #f7f9fd)); color: var(--orders-ink); font-size: 13px; box-shadow: none; text-align: left; }
+.orders-capture-tool > span { flex: 1; }
+.orders-form .orders-capture-tool > svg { width: 21px; height: 21px; flex: 0 0 auto; color: var(--accent, #6078cc); }
+.orders-form .orders-capture-tool > svg:last-child { width: 16px; height: 16px; }
+.orders-form .orders-capture-tool[aria-expanded=true] { border-color: var(--accent, #6078cc); background: color-mix(in srgb, var(--orders-blue) 16%, var(--panel-solid, #f7f9fd)); }
+.orders-capture-tool[aria-expanded=true] > svg:last-child { transform: rotate(180deg); }
+.orders-capture-panel > .orders-actions { margin-top: .75rem; align-items: end; }
+.orders-tick { display: flex !important; flex-direction: row !important; align-items: center; gap: .5rem; }
+.orders-tv:fullscreen { padding: 2rem; overflow: auto; background: var(--background, #edf2f9); color: var(--orders-ink); }
+.orders-tv:fullscreen .kanban-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
+.orders-logo { width: 36px; height: 36px; object-fit: contain; }
+.orders-scope button:disabled, .orders-form button:disabled { opacity: .5; cursor: not-allowed; }
+.dark-mode .orders-scope, .dark-mode .orders-form { --orders-blue: #91a7f0; --orders-amber: #d9aa59; --orders-green: #67ba99; --orders-violet: #b29cde; --orders-rose: #e093a4; }
+.dark-mode .orders-shortage-alert { color: #edc67e; }
+@media(max-width:640px) {
+  .orders-scope button, .orders-form button { min-height: 44px; }
+  .orders-scope input:not([type=checkbox]), .orders-scope select, .orders-scope textarea, .orders-form input:not([type=checkbox]), .orders-form select, .orders-form textarea { font-size: 16px; }
+  .orders-summary { grid-template-columns: 1fr 1fr; }
+  .orders-draft-row { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+  .orders-form .form-grid { grid-template-columns: 1fr; }
+  .orders-form .form-grid .wide { grid-column: 1; }
+  .orders-capture-tools { grid-template-columns: 1fr; }
+  .orders-toolbar > label { flex: 1 1 160px; }
+  .orders-tv:fullscreen { padding: .7rem; }
+  .orders-tv:fullscreen .kanban-grid { grid-template-columns: 1fr; }
+}
