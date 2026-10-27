@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Boxes, Database, UsersRound, UserRoundCog } from 'lucide-react'
 import { download, upload, useResource } from '@/lib/api'
 import { confirmAction } from '@/lib/confirm'
@@ -46,11 +46,12 @@ function InstallationSettings({ active }: { active: boolean }) {
   const installation = useResource<Installation>(active ? 'instalacion' : null, 0)
   const task = useTask()
   const canImport = can('inventario', 'editar')
+  const writeAllowed = useRef(canImport); writeAllowed.current = canImport
   const canExport = can('inventario') || can('reportes') || can('configuracion')
   const [importOpen, setImportOpen] = useState(false), [file, setFile] = useState<File | null>(null), [result, setResult] = useState<ImportResult | null>(null)
   async function importFile(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!file || !canImport || !await confirmAction('Los SKU existentes sumarán el stock indicado. Reimportar el mismo archivo vuelve a sumar sus cantidades.', { title: 'Importar inventario', confirmLabel: 'Importar y sumar stock' })) return
+    if (!file || !writeAllowed.current || task.busy || !await confirmAction('Los SKU existentes sumarán el stock indicado. Reimportar el mismo archivo vuelve a sumar sus cantidades.', { title: 'Importar inventario', confirmLabel: 'Importar y sumar stock' }) || !writeAllowed.current) return
     await task.run(async () => {
       const response = await upload<ImportResult>('importar/excel', file)
       setResult(response); setFile(null); setImportOpen(false)
@@ -70,6 +71,11 @@ function InstallationSettings({ active }: { active: boolean }) {
       {result && <div className="management-summary" role="status"><span>Creados: <strong>{result.creados}</strong></span><span>Actualizados: <strong>{result.actualizados}</strong></span><span>Omitidos: <strong>{result.omitidos}</strong></span></div>}
     </Panel>
     <Panel className="management-meta"><details className="inline-help"><summary>Ayuda</summary><h3>Funciones pendientes</h3><p className="subtle">AQL: matriz y criterios de aceptación. Zebra: conexión, plantillas y cola de impresión. Compras: módulo aún no disponible.</p></details></Panel>
-    {importOpen && canImport && <Modal title="Importar inventario desde Excel" onClose={() => { if (!task.busy) setImportOpen(false) }}><form className="management-form" onSubmit={importFile}><fieldset disabled={task.busy}><p className="subtle">Revisa el archivo antes de confirmar. Reimportarlo vuelve a sumar el stock de los SKU existentes.</p><div className="form-grid"><label className="wide">Archivo Excel (.xlsx)<input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required={!file} onChange={e => setFile(e.target.files?.[0] || null)} /></label></div>{file && <p className="subtle">{file.name} · {(file.size / 1024).toFixed(1)} KB</p>}<Feedback task={task} /><div className="modal-actions"><Button onClick={() => setImportOpen(false)}>Cancelar</Button><Button type="submit" variant="primary" disabled={!file}>{task.busy ? 'Importando…' : 'Importar y sumar stock'}</Button></div></fieldset></form></Modal>}
+    {importOpen && canImport && <Modal title="Importar inventario desde Excel" onClose={() => { if (!task.busy) setImportOpen(false) }}><form className="management-form" onSubmit={importFile}><fieldset disabled={task.busy}>
+      <p className="subtle">Revisa el archivo antes de confirmar. Reimportarlo vuelve a sumar el stock de los SKU existentes.</p>
+      <div className="management-dropzone" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); if (!task.busy && writeAllowed.current && event.dataTransfer.files[0]) { setFile(event.dataTransfer.files[0]); task.clear() } }}>
+        <p className="subtle">Arrastra el Excel aquí o elige un archivo.</p><div className="form-grid"><label className="wide">Archivo Excel (.xlsx)<input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" required={!file} onChange={event => { setFile(event.target.files?.[0] || null); task.clear() }} /></label></div>
+        {file && <p className="subtle">{file.name} · {(file.size / 1024).toFixed(1)} KB</p>}
+      </div><Feedback task={task} /><div className="modal-actions"><Button onClick={() => setImportOpen(false)}>Cancelar</Button><Button type="submit" variant="primary" disabled={!file}>{task.busy ? 'Importando…' : 'Importar y sumar stock'}</Button></div></fieldset></form></Modal>}
   </section>
 }

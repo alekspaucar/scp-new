@@ -4,7 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { api, jsonRequest, upload, useResource } from '@/lib/api'
 import { confirmAction } from '@/lib/confirm'
 import { fmt } from '@/lib/domain'
-import type { Material, Product } from '@/lib/types'
+import type { Client, Material, Product } from '@/lib/types'
 import { useSession } from '@/components/session-provider'
 import { Button, DataState, Empty, Feedback, Heading, Modal, Panel, ScrollTable, Status, useTask } from '@/components/shared'
 import './settings.css'
@@ -27,8 +27,10 @@ export function Catalog({ active = true }: { active?: boolean }) {
   const { can } = useSession()
   const readable = can('configuracion') || can('produccion') || can('reportes') || can('calculadora') || can('pedidos', 'editar')
   const editable = can('configuracion', 'editar')
+  const writeAllowed = useRef(editable); writeAllowed.current = editable
   const resource = useResource<Product[]>(active && readable ? 'catalogo' : null)
   const materials = useResource<Material[]>(active && editable ? 'materiales' : null, 0)
+  const clients = useResource<Client[]>(active && editable ? 'clientes' : null)
   const task = useTask()
   const counter = useRef(0)
   const [search, setSearch] = useState(''), [drafts, setDrafts] = useState<Record<string, Draft>>({})
@@ -60,12 +62,13 @@ export function Catalog({ active = true }: { active?: boolean }) {
     let current = { ...input, value: { ...input.value }, error: '' }
     let savedThisAttempt = false
     try {
-      if (!editable) throw new Error('No tienes permiso para modificar el catálogo.')
+      if (!writeAllowed.current) throw new Error('No tienes permiso para modificar el catálogo.')
       const result = await api<{ producto: Product }>(current.value.id ? `catalogo/${current.value.id}` : 'catalogo', jsonRequest(current.value.id ? 'PUT' : 'POST', payload(current.value)))
       current = { ...current, value: result.producto, savedBase: true }
       savedThisAttempt = true
       setDrafts(previous => ({ ...previous, [current.key]: current }))
       setEditor(previous => previous?.key === current.key ? current : previous)
+      if ((current.file || current.removeImage) && !writeAllowed.current) throw new Error('Ya no tienes permiso para modificar la referencia.')
       if (current.file) await upload(`catalogo/${current.value.id}/imagen`, current.file)
       else if (current.removeImage) await api(`catalogo/${current.value.id}/imagen`, { method: 'DELETE' })
       return current
@@ -78,7 +81,7 @@ export function Catalog({ active = true }: { active?: boolean }) {
   }
   async function saveOne(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!editor || !editable) return
+    if (!editor || !writeAllowed.current || task.busy) return
     const current = editor
     const intent = (event.nativeEvent as SubmitEvent).submitter?.getAttribute('value')
     if (intent === 'draft') {
@@ -86,11 +89,12 @@ export function Catalog({ active = true }: { active?: boolean }) {
       setDrafts(previous => ({ ...previous, [current.key]: { ...current, error: '' } })); toggle(current.key, true); setEditor(null); return
     }
     if (current.removeImage && !await confirmAction('¿Eliminar la referencia guardada de este producto al guardar los cambios?', { title: 'Eliminar referencia', confirmLabel: 'Guardar y eliminar', danger: true })) return
+    if (!writeAllowed.current) return
     await task.run(async () => { await persist(current); await resource.reload(); clearDraft(current.key); toggle(current.key, false); setEditor(null); return true }, 'Producto guardado.')
   }
   async function saveBatch() {
     const pending = Object.values(drafts).filter(d => selected.has(d.key))
-    if (!pending.length || !editable) return
+    if (!pending.length || !writeAllowed.current || task.busy) return
     const removals = pending.filter(d => d.removeImage).length
     if (removals && !await confirmAction(`¿Eliminar ${removals} referencia(s) adjunta(s) al guardar este lote?`, { title: 'Eliminar referencias', confirmLabel: 'Guardar y eliminar', danger: true })) return
     await task.run(async () => {
@@ -102,11 +106,11 @@ export function Catalog({ active = true }: { active?: boolean }) {
     }, 'Borradores seleccionados guardados.')
   }
   async function remove(targets: Draft[]) {
-    if (!editable || !targets.length || !await confirmAction(`¿Eliminar definitivamente ${targets.length} producto(s) guardados?`, { title: 'Eliminar productos', confirmLabel: 'Eliminar', danger: true })) return
+    if (!writeAllowed.current || task.busy || !targets.length || !await confirmAction(`¿Eliminar definitivamente ${targets.length} producto(s)?`, { title: 'Eliminar productos', confirmLabel: 'Eliminar', danger: true }) || !writeAllowed.current) return
     await task.run(async () => {
       let failures = 0, successes = 0
       for (const row of targets) {
-        try { if (row.value.id) await api(`catalogo/${row.value.id}`, { method: 'DELETE' }); clearDraft(row.key); toggle(row.key, false); successes++ }
+        try { if (!writeAllowed.current) throw new Error('Ya no tienes permiso para eliminar productos.'); if (row.value.id) await api(`catalogo/${row.value.id}`, { method: 'DELETE' }); clearDraft(row.key); toggle(row.key, false); successes++ }
         catch (reason) { failures++; setErrors(previous => ({ ...previous, [row.key]: message(reason) })) }
       }
       await resource.reload()
@@ -134,11 +138,13 @@ export function Catalog({ active = true }: { active?: boolean }) {
     {editor && editable && <Modal title={editor.value.id ? 'Editar producto' : 'Nuevo producto'} onClose={close} wide><form className="management-form" onSubmit={saveOne}><fieldset disabled={task.busy}>
       <details className="inline-help"><summary>Ayuda</summary><p className="subtle">El código guardado no se puede cambiar. Usa «-» si no hay código. El cliente es texto libre; puedes repetir un código para distintos clientes. Los códigos especiales usan Mesp si no eliges otra máquina. La referencia se guarda después de los datos del producto.</p></details>
       {editor.savedBase && <p className="subtle">El producto #{editor.value.id} ya está guardado. Puedes reintentar la referencia sin crear otro producto.</p>}
-      <div className="form-grid"><label>Código<input value={editor.value.codigo} readOnly={Boolean(editor.value.id)} maxLength={100} onChange={e => patch({ codigo: e.target.value })} /></label><label>Cliente<input value={editor.value.cliente || ''} maxLength={150} onChange={e => patch({ cliente: e.target.value })} /></label><label className="wide">Descripción<textarea required maxLength={300} value={editor.value.descripcion} onChange={e => patch({ descripcion: e.target.value })} /></label>
-      {numbers.map(([field, label, integer]) => <label key={field}>{label}<input type="number" required min={field === 'tiempo_base_minutos' ? '0.000001' : '0'} step={integer ? '1' : 'any'} value={Number.isFinite(editor.value[field]) ? editor.value[field] : ''} onChange={e => patch({ [field]: e.target.value === '' ? Number.NaN : Number(e.target.value) })} /></label>)}
+      <div className="form-grid"><label>Código<input value={editor.value.codigo} readOnly={Boolean(editor.value.id)} maxLength={100} onChange={e => patch({ codigo: e.target.value })} /></label><label>Cliente<input value={editor.value.cliente || ''} list="management-catalog-clients" autoComplete="off" maxLength={150} onChange={e => patch({ cliente: e.target.value })} /></label><label className="wide">Descripción<textarea required maxLength={300} value={editor.value.descripcion} onChange={e => patch({ descripcion: e.target.value })} /></label>
+      {numbers.map(([field, label, integer]) => <label key={field}>{label}<input type="number" required={field === 'tiempo_base_minutos'} min={field === 'tiempo_base_minutos' ? '0.000001' : '0'} step={integer ? '1' : 'any'} value={Number.isFinite(editor.value[field]) ? editor.value[field] : ''} onChange={e => patch({ [field]: e.target.value === '' && field === 'tiempo_base_minutos' ? Number.NaN : Number(e.target.value) })} /></label>)}
       <label>Material<select value={editor.value.material_id || ''} onChange={e => patch({ material_id: Number(e.target.value) || null })}><option value="">Sin material vinculado</option>{editor.value.material_id && !materials.data?.some(m => m.id === editor.value.material_id) && <option value={editor.value.material_id}>{editor.value.material_sku || `Material #${editor.value.material_id}`}</option>}{materials.data?.map(m => <option key={m.id} value={m.id}>{m.codigo_barras} · {m.nombre}</option>)}</select></label><label>Tipo de código<select value={editor.value.tipo_codigo} onChange={e => patch({ tipo_codigo: e.target.value })}><option value="normal">Normal</option><option value="especial">Especial</option></select></label>
       <label>Máquina requerida<select value={editor.value.maquina_requerida || ''} onChange={e => patch({ maquina_requerida: e.target.value || null })}><option value="">Según reglas del código</option><option value="M1">M1</option><option value="M2">M2</option><option value="Mesp">Mesp</option></select></label><label>Referencia (JPG, PNG o PDF)<input type="file" accept=".jpg,.jpeg,.png,.pdf" onChange={e => { const file = e.target.files?.[0]; e.target.value = ''; setEditor(previous => previous ? { ...previous, file, removeImage: false, error: '' } : null) }} /></label></div>
       <DataState resource={materials} />
+      <datalist id="management-catalog-clients">{clients.data?.map(client => <option key={client.id} value={client.nombre}>{client.codigo}</option>)}</datalist>
+      <DataState resource={clients} />
       <div className="management-preview">{preview && editor.file?.type.startsWith('image/') ? <img src={preview} alt="Vista previa de referencia pendiente" /> : !editor.removeImage && !editor.file && editor.value.imagen_url && !/\.pdf(?:$|\?)/i.test(editor.value.imagen_url) ? <img src={editor.value.imagen_url} alt="Referencia actual" /> : null}{editor.file && <span>{editor.file.name} · {(editor.file.size / 1024).toFixed(1)} KB <Button onClick={() => setEditor(previous => previous ? { ...previous, file: undefined } : null)}>Quitar archivo elegido</Button></span>}{preview && <a href={preview} target="_blank" rel="noreferrer">Abrir archivo elegido</a>}{editor.value.imagen_url && <a href={editor.value.imagen_url} target="_blank" rel="noreferrer">Abrir referencia guardada</a>}</div>
       {editor.value.imagen_url && <label className="management-check"><input type="checkbox" checked={Boolean(editor.removeImage)} onChange={e => { const checked = e.target.checked; setEditor(previous => previous ? { ...previous, removeImage: checked, file: undefined } : null) }} />Eliminar referencia al guardar</label>}
       {editor.error && <p className="management-error" role="alert">{editor.error}</p>}<Feedback task={task} />

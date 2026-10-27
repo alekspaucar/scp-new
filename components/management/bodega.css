@@ -1,4 +1,5 @@
 .bodega { min-width: 0; }
+.bodega .metrics-grid { grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); }
 .bodega .scroll-table { min-width: 0; max-width: 100%; }
 .bodega .table-top-scroll, .bodega .table-bottom-scroll { overflow-x: auto; }
 .bodega .heading-actions, .bodega-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
@@ -20,6 +21,7 @@
 .bodega-note { border: 1px solid rgba(212,157,78,.35); background: rgba(255,241,217,.45); border-radius: 12px; padding: 12px 16px; color: #956c31; font-size: 12px; line-height: 1.6; }
 .bodega .form-grid input[readonly], .bodega .form-grid textarea[readonly] { opacity: .65; }
 .bodega fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.bodega-file-drop { border: 1px dashed rgba(148,163,184,.55); border-radius: 12px; padding: 1rem; margin-top: 1rem; }
 .bodega fieldset:disabled, .bodega button:disabled { opacity: .6; cursor: wait; }
 .bodega .bodega-details { min-width: 160px; max-width: 300px; }
 .bodega-details summary { cursor: pointer; color: #6177d5; font-size: 11px; }

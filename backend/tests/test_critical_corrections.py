@@ -298,6 +298,8 @@ def test_invoice_optimistic_conflict_rolls_back_and_removes_unreferenced_upload(
     from sqlalchemy import event, inspect, text
     from app.models import Pedido
     order = create_order(jefe)
+    # Compare the same detail contract, including derived reference metadata.
+    order = jefe.get(f"/api/pedidos/{order['id']}").json
     file = io.BytesIO()
     canvas = Canvas(file)
     canvas.drawString(50, 750, 'Conflict invoice')

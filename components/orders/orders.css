@@ -108,6 +108,21 @@
 .orders-tv:fullscreen { padding: 2rem; overflow: auto; background: var(--background, #edf2f9); color: var(--orders-ink); }
 .orders-tv:fullscreen .kanban-grid { grid-template-columns: repeat(3,minmax(0,1fr)); }
 .orders-logo { width: 36px; height: 36px; object-fit: contain; }
+.orders-pagination { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem; padding: 1rem; }
+.orders-row-progress { display: flex; align-items: center; gap: .4rem; margin-top: .4rem; }
+.orders-row-progress progress { width: 70px; height: 5px; accent-color: var(--orders-blue); }
+.orders-filter-dates { padding: .6rem 1rem; border-bottom: 1px solid var(--orders-line); }
+.orders-filter-dates > summary, .orders-reference > summary, .orders-clock-row summary { cursor: pointer; color: var(--orders-muted); font-size: .75rem; font-weight: 600; }
+.orders-filter-dates .orders-toolbar { padding-inline: 0; }
+.orders-reference { margin-bottom: .6rem; font-size: .75rem; }
+.orders-reference > a { display: inline-flex; flex-direction: column; gap: .5rem; padding-top: .6rem; color: var(--orders-ink); overflow-wrap: anywhere; }
+.orders-reference img { display: block; width: auto; max-width: min(100%, 320px); height: auto; max-height: 220px; object-fit: contain; border-radius: .4rem; }
+.orders-reference > summary:focus-visible, .orders-filter-dates > summary:focus-visible, .orders-clock-row summary:focus-visible { outline: 2px solid var(--accent, #6177d5); outline-offset: 3px; }
+.orders-clock-row { display: flex; flex-wrap: wrap; align-items: center; gap: 1rem; }
+.orders-clock { font-size: clamp(1.4rem, 4vw, 2.3rem); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2; }
+.orders-clock-row label { display: flex; align-items: center; gap: .6rem; margin-top: .5rem; font-size: .75rem; }
+.orders-clock-row input[type=color] { width: 3rem; min-height: 36px; padding: .2rem; }
+.orders-scope .status-pill.neutral { color: var(--orders-muted); background: var(--field); }
 .orders-scope button:disabled, .orders-form button:disabled { opacity: .5; cursor: not-allowed; }
 .dark-mode .orders-scope, .dark-mode .orders-form { --orders-blue: #91a7f0; --orders-amber: #d9aa59; --orders-green: #67ba99; --orders-violet: #b29cde; --orders-rose: #e093a4; }
 .dark-mode .orders-shortage-alert { color: #edc67e; }

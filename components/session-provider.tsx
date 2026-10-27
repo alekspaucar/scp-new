@@ -8,7 +8,7 @@ import type { Access, Module, SessionUser } from '@/lib/types'
 interface SessionContextValue {
   user: SessionUser | null; loading: boolean; error: string; isManager: boolean
   refresh: () => Promise<void>; can: (module: Module, level?: Access) => boolean
-  login: (username: string, password: string, initial?: boolean) => Promise<void>
+  login: (username: string, password: string, initial?: boolean, installationToken?: string) => Promise<void>
   logout: () => Promise<void>
 }
 const SessionContext = createContext<SessionContextValue | null>(null)
@@ -33,10 +33,20 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     window.addEventListener('sgp:session-change', onChange)
     return () => { ++epoch.current; clearInterval(timer); window.removeEventListener('sgp:session-change', onChange) }
   }, [refresh])
-  const login = async (username: string, password: string, initial = false) => {
-    const requestEpoch = ++epoch.current; changingIdentity.current = true
-    try { const result = await api<SessionUser>(initial ? 'instalacion' : 'login', jsonRequest('POST', { username, password })); if (requestEpoch === epoch.current) { setUser(result); setError('') } }
-    finally { changingIdentity.current = false }
+  const login = async (username: string, password: string, initial = false, installationToken = '') => {
+    const requestEpoch = ++epoch.current
+    changingIdentity.current = true
+    try {
+      const request = jsonRequest('POST', { username, password })
+      if (initial) {
+        request.headers = {
+          ...Object.fromEntries(new Headers(request.headers).entries()),
+          'X-Installation-Token': installationToken,
+        }
+      }
+      const result = await api<SessionUser>(initial ? 'instalacion' : 'login', request)
+      if (requestEpoch === epoch.current) { setUser(result); setError('') }
+    } finally { changingIdentity.current = false }
   }
   const logout = async () => {
     const requestEpoch = ++epoch.current; changingIdentity.current = true

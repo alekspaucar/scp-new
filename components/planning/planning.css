@@ -79,6 +79,11 @@
 .planning-agenda-view .planning-fold[open] > summary::after { transform: rotate(90deg); }
 .planning-agenda-view .planning-fold-hint { color: var(--muted); font-size: 12px; font-weight: 400; }
 .planning-agenda-view .planning-timeline-content { min-width: 0; padding: 12px 14px 14px; }
+.planning-agenda-view.planning-view .planning-bar { min-width: 0; min-height: 30px; padding: 0; }
+.planning-schedule-options { border: 1px solid var(--line); border-radius: 10px; }
+.planning-schedule-options > summary { padding: 12px; min-height: 44px; color: var(--accent); cursor: pointer; font-size: 13px; font-weight: 550; }
+.planning-schedule-options > .planning-editor { margin: 0; padding: 0 12px 12px; }
+.planning-agenda-view .planning-pending > .planning-reservations { max-height: 360px; overflow-y: auto; overscroll-behavior: contain; }
 .planning-agenda-view .planning-toolbar { margin-bottom: 10px; align-items: center; }
 .planning-agenda-view .planning-toolbar .planning-note { flex: 1 1 200px; margin: 0; }
 .planning-agenda-view .planning-scroll { border: 1px solid var(--line); border-radius: 8px; }

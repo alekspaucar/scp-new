@@ -82,8 +82,35 @@ def create_app():
         _migrar_catalogo_planificacion()
         _migrar_catalogo_constraint()
         _migrar_pedido_planificacion()
+        _crear_admin_render()
 
     return app
+
+
+def _crear_admin_render():
+    """Create the requested first administrator only on the Render service.
+
+    The account is created once, after the schema exists. Requiring the
+    installation token prevents this convenience bootstrap from activating on
+    arbitrary Render previews or locally.
+    """
+    if (os.environ.get('RENDER') != 'true'
+            or os.environ.get('IS_PULL_REQUEST') == 'true'
+            or not os.environ.get('INSTALLATION_TOKEN')):
+        return
+    try:
+        db.session.execute(text('BEGIN IMMEDIATE'))
+        if Usuario.query.first() is None:
+            user = Usuario(username='admin', rol='admin')
+            user.set_password('12345')
+            db.session.add(user)
+            db.session.commit()
+            print('[instalación] cuenta admin creada para Render')
+        else:
+            db.session.rollback()
+    except OperationalError:
+        db.session.rollback()
+        raise
 
 
 def _migrar_revisiones():

@@ -8,7 +8,8 @@ import { api, ApiError, jsonRequest, upload, useResource } from '@/lib/api'
 import { dateInput, fmt, fmtDate } from '@/lib/domain'
 import { confirmAction } from '@/lib/confirm'
 import type { Client, Order, Product } from '@/lib/types'
-import { useOrderAction } from './order-action'
+import { useCurrentOrderGuard, useOrderAction } from './order-action'
+import { productForItem, ProductReference } from './order-reference'
 import './orders.css'
 
 interface DraftItem { key: string; id?: number; codigo: string; descripcion: string; cantidad: number; minimum?: number }
@@ -24,18 +25,20 @@ export function OrderEditor({ order, onClose, onSaved }: { order?: Order; onClos
   const { can, user } = useSession()
   const [referenceOrder, setReferenceOrder] = useState(order), [revision, setRevision] = useState(order?.revision), [conflict, setConflict] = useState(false)
   const allowed = can('pedidos', 'editar') && (referenceOrder?.estado !== 'Entregado' || user?.rol === 'jefe')
+  const guard = useCurrentOrderGuard(allowed, `${referenceOrder?.id || 'new'}`)
   // Catalogs are only requested while an authorized editor is actually open.
   const products = useResource<Product[]>(allowed ? 'catalogo' : null, 0), clients = useResource<Client[]>(allowed ? 'clientes' : null, 0)
   const [client, setClient] = useState(order?.cliente || ''), [oc, setOc] = useState(order?.orden_compra || ''), [date, setDate] = useState(dateInput(order?.fecha_entrega))
   const [items, setItems] = useState<DraftItem[]>(() => order ? draftItems(order) : [newRow()])
   const [review, setReview] = useState(false), [validation, setValidation] = useState(''), [imported, setImported] = useState(false), [reviewed, setReviewed] = useState(false), [importNote, setImportNote] = useState('')
   const [scan, setScan] = useState(''), [scanQty, setScanQty] = useState(1), [rowCount, setRowCount] = useState<string | null>(null), [document, setDocument] = useState<File | null>(null)
-  const task = useTask(), reader = useTask(), reloader = useTask(), scanRef = useRef<HTMLInputElement>(null), action = useOrderAction()
+  const task = useTask(), reader = useTask(), reloader = useTask(), scanRef = useRef<HTMLInputElement>(null), documentRef = useRef<HTMLInputElement>(null), action = useOrderAction()
   const blocked = task.busy || reader.busy || reloader.busy || action.busy, captureId = useId()
   const [captureTool, setCaptureTool] = useState<'document' | 'scan' | null>(null)
   function isBlocked() { return action.isBusy() || task.busy || reader.busy || reloader.busy }
   const catalog = (products.data || []).filter(product => norm(product.cliente || '') === norm(client))
   const dirty = useRef(false)
+  function selectDocument(file: File | null) { if (!allowed || isBlocked()) return; setDocument(file); reader.clear(); setValidation('') }
   function change() { dirty.current = true; setReview(false); setReviewed(false) }
   function changeClient(value: string, fromImport = false) {
     if (!fromImport && isBlocked()) return
@@ -49,7 +52,7 @@ export function OrderEditor({ order, onClose, onSaved }: { order?: Order; onClos
   async function close() {
     if (isBlocked()) return
     await action.run(async () => {
-      if (dirty.current && !await confirmAction('¿Cerrar y descartar los cambios sin guardar?', { confirmLabel: 'Descartar cambios', danger: true })) return
+      if ((dirty.current || scan.trim() || document) && !await confirmAction('¿Cerrar y descartar los cambios sin guardar?', { confirmLabel: 'Descartar cambios', danger: true })) return
       onClose()
     })
   }
@@ -106,10 +109,15 @@ export function OrderEditor({ order, onClose, onSaved }: { order?: Order; onClos
   }
   function addScan() {
     if (isBlocked()) return
+    if (!client.trim()) { setValidation('Selecciona un cliente primero.'); return }
     const code = norm(scan)
     if (!code || !Number.isInteger(scanQty) || scanQty < 1) { setValidation('Indica un código y una cantidad entera positiva.'); return }
     const match = catalog.filter(product => norm(product.codigo) === code)
-    const existing = !['S/C', '-'].includes(code) ? items.find(item => norm(item.codigo) === code) : undefined
+    if (match.length > 1) { setValidation('Hay varios productos con este código. Selecciona la descripción correcta desde el catálogo.'); return }
+    // A repeated code may refer to a different manually described job. Only
+    // combine an unambiguous catalog match with the same description.
+    const candidates = match.length === 1 && !['S/C', '-'].includes(code) ? items.filter(item => norm(item.codigo) === code && norm(item.descripcion) === norm(match[0].descripcion)) : []
+    const existing = candidates.length === 1 ? candidates[0] : undefined
     const blank = items.find(isBlankRow)
     if (!existing && !blank && items.length >= 50) { setValidation('Se alcanzó el límite de 50 ítems.'); return }
     change()
@@ -118,15 +126,17 @@ export function OrderEditor({ order, onClose, onSaved }: { order?: Order; onClos
       const row = { codigo: code, descripcion: match.length === 1 ? match[0].descripcion : '', cantidad: scanQty }
       setItems(current => blank ? current.map(item => item.key === blank.key ? { ...item, ...row } : item) : [...current, { ...newRow(), ...row }])
     }
-    setValidation(match.length > 1 ? 'Hay varios productos con este código. Selecciona la descripción correcta.' : ''); setScan(''); setScanQty(1); scanRef.current?.focus()
+    setValidation(''); setScan(''); setScanQty(1); scanRef.current?.focus()
   }
   async function readDocument() {
     if (order || !allowed || !document || isBlocked()) return
     await action.run(async () => {
       if (dirty.current && !await confirmAction('¿Aplicar los datos detectados? Se actualizarán cliente, OC y fecha detectados. Los ítems coincidentes se actualizarán y los nuevos se agregarán; revisa el resultado.', { confirmLabel: 'Aplicar datos' })) return
+      if (!guard()) return
       const data = await reader.run(() => upload<ReadDocument>('pedidos/leer-documento', document))
-      if (!data) return
-      change(); setImported(true); setReviewed(false)
+      if (!data || !guard()) return
+      change(); setImported(true); setReviewed(false); setDocument(null)
+      if (documentRef.current) documentRef.current.value = ''
       const clientChanged = Boolean(data.cliente && norm(data.cliente) !== norm(client))
       if (data.cliente) changeClient(data.cliente, true)
       if (data.orden_compra) setOc(data.orden_compra)
@@ -153,6 +163,7 @@ export function OrderEditor({ order, onClose, onSaved }: { order?: Order; onClos
     event.preventDefault(); setValidation('')
     if (!allowed || isBlocked() || conflict) return
     if (scan.trim()) { setValidation('Agrega el escaneo pendiente o limpia el código antes de revisar.'); return }
+    if (document) { setValidation('Hay un documento seleccionado pendiente de lectura. Léelo o descártalo antes de revisar.'); return }
     if (!client.trim() || !date || items.length < 1 || items.length > 50) { setValidation('Completa cliente, fecha y entre 1 y 50 ítems.'); return }
     if (items.some(item => !item.descripcion.trim() || !Number.isInteger(item.cantidad) || item.cantidad < Math.max(1, item.minimum || 1))) { setValidation('Cada ítem necesita descripción y cantidad entera positiva, al menos igual a sus entregas registradas.'); return }
     if (imported && !reviewed) { setValidation('Confirma la revisión manual de los datos leídos del documento.'); return }
@@ -163,6 +174,7 @@ export function OrderEditor({ order, onClose, onSaved }: { order?: Order; onClos
     if (referenceOrder && !Number.isInteger(revision)) { setConflict(true); setValidation('Este borrador no tiene una revisión válida. Recarga el pedido vigente antes de guardar.'); return }
     await action.run(async () => {
       if (referenceOrder && !await confirmAction(`¿Guardar las correcciones del pedido #${referenceOrder.id}?${referenceOrder.estado === 'Entregado' ? ' El servidor ajustará su impacto en stock.' : ''}`, { confirmLabel: 'Guardar correcciones' })) return
+      if (!guard()) return
       const result = await task.run(async () => {
         try {
           return await api<{ pedido: Order }>(referenceOrder ? `pedidos/${referenceOrder.id}` : 'pedidos', jsonRequest(referenceOrder ? 'PUT' : 'POST', {
@@ -174,7 +186,7 @@ export function OrderEditor({ order, onClose, onSaved }: { order?: Order; onClos
           throw error
         }
       })
-      if (result) { dirty.current = false; onSaved() }
+      if (result && guard()) { dirty.current = false; onSaved() }
     })
   }
   return <Modal wide title={order ? `Editar pedido #${order.id}` : 'Nuevo pedido'} onClose={() => void close()}>
@@ -186,19 +198,20 @@ export function OrderEditor({ order, onClose, onSaved }: { order?: Order; onClos
         <ScrollTable><table className="orders-table"><thead><tr><th>Código</th><th>Descripción</th><th>Cantidad</th></tr></thead><tbody>{items.map(item => <tr key={item.key}><td>{item.codigo.trim() || 'S/C'}</td><td>{item.descripcion}</td><td>{fmt(item.cantidad)}</td></tr>)}</tbody></table></ScrollTable>
         <div className="orders-actions"><Button disabled={blocked} onClick={() => setReview(false)}>Volver a editar</Button><Button disabled={blocked || conflict} variant="primary" onClick={() => void save()}>{task.busy ? 'Guardando…' : task.error ? 'Reintentar guardar' : 'Confirmar y guardar'}</Button></div></> : <>
         <div className="orders-capture-tools">
-          {!order && <Button className="orders-capture-tool" aria-expanded={captureTool === 'document'} aria-controls={`${captureId}-document`} onClick={() => setCaptureTool(current => current === 'document' ? null : 'document')}><FileUp aria-hidden="true" /><span>Importar documento</span><ChevronDown aria-hidden="true" /></Button>}
+          {!order && <Button className="orders-capture-tool" aria-expanded={captureTool === 'document'} aria-controls={`${captureId}-document`} onClick={() => setCaptureTool(current => current === 'document' ? null : 'document')}><FileUp aria-hidden="true" /><span>Importar documento{document ? ' · pendiente' : ''}</span><ChevronDown aria-hidden="true" /></Button>}
           <Button className="orders-capture-tool" aria-expanded={captureTool === 'scan'} aria-controls={`${captureId}-scan`} onClick={() => setCaptureTool(current => current === 'scan' ? null : 'scan')}><ScanBarcode aria-hidden="true" /><span>Escáner{scan.trim() ? ' · código pendiente' : ''}</span><ChevronDown aria-hidden="true" /></Button>
         </div>
-        {!order && <section id={`${captureId}-document`} hidden={captureTool !== 'document'}><fieldset className="orders-capture-panel" disabled={blocked}><legend>Importar documento</legend><p className="subtle">Completa datos desde PDF/foto</p><div className="orders-actions"><label>Seleccionar PDF o imagen<input type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" onChange={event => setDocument(event.target.files?.[0] || null)} /></label><Button variant="primary" disabled={!document || blocked} onClick={() => void readDocument()}>{reader.busy ? 'Leyendo…' : reader.error ? 'Reintentar lectura' : 'Leer y completar'}</Button></div></fieldset></section>}
+        {!order && <section id={`${captureId}-document`} hidden={captureTool !== 'document'} onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); selectDocument(event.dataTransfer.files?.[0] || null) }}><fieldset className="orders-capture-panel" disabled={blocked}><legend>Importar documento</legend><p className="subtle">Arrastra un PDF o una foto aquí, o selecciona el archivo.</p><div className="orders-actions"><label>Seleccionar PDF o imagen<input ref={documentRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.webp" onChange={event => selectDocument(event.target.files?.[0] || null)} /></label><Button variant="primary" disabled={!document || blocked} onClick={() => void readDocument()}>{reader.busy ? 'Leyendo…' : reader.error ? 'Reintentar lectura' : 'Leer y completar'}</Button>{document && <Button disabled={blocked} onClick={() => { setDocument(null); if (documentRef.current) documentRef.current.value = '' }}>Descartar documento seleccionado</Button>}</div>{document && <p className="subtle">Documento pendiente: {document.name}</p>}</fieldset></section>}
         {imported && <div className="orders-note">{importNote}</div>}
         <DataState resource={clients} /><DataState resource={products} />
-        <form onSubmit={validate} className="orders-form"><fieldset disabled={blocked}><legend>Datos del pedido</legend><div className="form-grid"><label>Cliente<input required list="order-clients" value={client} onChange={event => changeClient(event.target.value)} /><datalist id="order-clients">{(clients.data || []).map(entry => <option key={entry.id} value={entry.nombre} />)}</datalist><span className="subtle">Cambiar cliente limpia los códigos y el escáner.</span></label><label>Orden de compra (opcional)<input value={oc} onChange={event => { if (isBlocked()) return; change(); setOc(event.target.value) }} placeholder="S/N" /></label><label>Fecha y hora de entrega (Ecuador)<input type="datetime-local" required value={date} onChange={event => { if (isBlocked()) return; change(); setDate(event.target.value) }} /></label></div></fieldset>
-          <section id={`${captureId}-scan`} hidden={captureTool !== 'scan'}>{captureTool === 'scan' && <fieldset className="orders-capture-panel" disabled={blocked}><legend>Escáner</legend><div className="orders-actions"><label>Código de barras o manual<input aria-label="Código para escanear" autoFocus ref={scanRef} value={scan} onChange={event => { if (!isBlocked()) setScan(event.target.value) }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); addScan() } }} /></label><label>Cantidad<input type="number" min={1} step={1} value={scanQty || ''} onChange={event => { if (!isBlocked()) setScanQty(Number(event.target.value)) }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); addScan() } }} /></label><Button onClick={addScan}>Agregar escaneo</Button></div></fieldset>}</section>
+        <form onSubmit={validate} className="orders-form"><fieldset disabled={blocked}><legend>Datos del pedido</legend><div className="form-grid"><label>Cliente<input required list="order-clients" value={client} onChange={event => changeClient(event.target.value)} /><datalist id="order-clients">{(clients.data || []).map(entry => <option key={entry.id} value={entry.nombre} />)}</datalist><span className="subtle">Cambiar cliente limpia los códigos y el escáner.</span>{client.trim() && clients.data && !clients.data.some(entry => norm(entry.nombre) === norm(client)) && <span className="orders-shortage-alert">Nuevo cliente: se creará al guardar.</span>}</label><label>Orden de compra (opcional)<input value={oc} onChange={event => { if (isBlocked()) return; change(); setOc(event.target.value) }} placeholder="S/N" /></label><label>Fecha y hora de entrega (Ecuador)<input type="datetime-local" required value={date} onChange={event => { if (isBlocked()) return; change(); setDate(event.target.value) }} /></label></div></fieldset>
+          <section id={`${captureId}-scan`} hidden={captureTool !== 'scan'}>{captureTool === 'scan' && <fieldset className="orders-capture-panel" disabled={blocked}><legend>Escáner</legend><div className="orders-actions"><label>Código de barras o manual<input aria-label="Código para escanear" autoFocus ref={scanRef} value={scan} onChange={event => { if (!isBlocked()) setScan(event.target.value) }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); addScan() } }} /></label><label>Cantidad<input type="number" min={1} step={1} value={scanQty || ''} onChange={event => { if (!isBlocked()) setScanQty(Number(event.target.value)) }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); addScan() } }} /></label><Button onClick={addScan}>Agregar escaneo</Button>{(scan.trim() || scanQty !== 1) && <Button onClick={() => { if (isBlocked()) return; setScan(''); setScanQty(1); setValidation(''); scanRef.current?.focus() }}>Cancelar escaneo</Button>}</div></fieldset>}</section>
           <fieldset disabled={blocked}><legend>Ítems ({items.length}/50)</legend>
             <div className="orders-actions orders-row-control"><label>Filas<input type="number" min={1} max={50} step={1} value={rowCount ?? items.length} onChange={event => void resizeRows(event.target.value)} onBlur={() => setRowCount(null)} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); event.stopPropagation() } }} /></label></div>
             {items.map((item, index) => <div key={item.key}>
             <label>Ítem {index + 1} · Producto<select value="" onChange={event => selectProduct(item.key, event.target.value)}><option value="">Catálogo del cliente</option>{catalog.map(product => <option key={product.id} value={product.id}>{product.codigo === '-' ? 'S/C' : product.codigo} · {product.descripcion}</option>)}</select></label>
             <div className="orders-draft-row"><label>Código<input aria-label={`Código del ítem ${index + 1}`} list={`codes-${item.key}`} value={item.codigo} placeholder="S/C" onChange={event => { const code = event.target.value; const matches = catalog.filter(product => norm(product.codigo) === norm(code)); update(item.key, { codigo: code, ...(matches.length === 1 ? { descripcion: matches[0].descripcion } : {}) }) }} /><datalist id={`codes-${item.key}`}>{catalog.filter(product => product.codigo !== '-').map(product => <option key={product.id} value={product.codigo}>{product.descripcion}</option>)}</datalist></label><label>Descripción<input required value={item.descripcion} onChange={event => update(item.key, { descripcion: event.target.value })} /></label><label>Cantidad<input required type="number" min={Math.max(1, item.minimum || 1)} step={1} value={item.cantidad || ''} onChange={event => update(item.key, { cantidad: Number(event.target.value) })} /></label><Button variant="danger" disabled={items.length <= 1} onClick={() => void removeRow(item, index)}>Quitar</Button></div>
+            <ProductReference product={productForItem(catalog, client, item)} />
           </div>)}<details className="orders-editor-details"><summary>Ayuda de captura</summary><p className="subtle">Filas indica el total visible. El catálogo corresponde al cliente escrito; también puedes completar los campos manualmente. Un cliente nuevo se crea al guardar y un código vacío se guarda como S/C.</p></details></fieldset>
           {imported && <label className="orders-tick"><input type="checkbox" checked={reviewed} onChange={event => setReviewed(event.target.checked)} />Revisé manualmente todos los datos del documento y confirmé la hora de entrega.</label>}
           <div className="orders-actions"><Button onClick={() => void close()} disabled={blocked}>Cancelar</Button><Button type="submit" variant="primary" disabled={blocked || conflict}>Revisar pedido</Button></div>

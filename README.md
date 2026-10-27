@@ -2,6 +2,12 @@
 
 Proyecto independiente construido con la interfaz Next.js entregada y las funciones operativas de SGP. Su backend Flask, base SQLite, archivos y sesiones pertenecen a esta carpeta. No necesita ejecutar el proyecto Angular anterior ni conectarse al servidor de la planta.
 
+## Revisión integral — 27 de octubre de 2026
+
+Se contrastaron las funciones del original con cada área nueva. Se completaron referencias, enlaces, operaciones por lote, captura y recuperación de errores, permisos y validación de planificación. El Gantt usa una agenda compacta, pendientes visibles y asignación al siguiente espacio; fecha/duración son opcionales y la cronología muestra un día acotado.
+
+Verificación actual: **227 pruebas backend, 103 de cliente y 18 de navegador aprobadas**, más el recorrido completo de 18 comprobaciones sin errores JavaScript. Compilación y tipos aprobados. Se revisaron visualmente todas las páginas de cuatro PDFs y la interfaz en escritorio y móvil. Consulta `docs/2026-10-27-cobertura-funcional.md` para funciones, reglas y límites de la evidencia.
+
 ## Abrir la aplicación
 
 Desde esta carpeta, con Node.js 22.16 o posterior y Python 3.14 (versión utilizada para verificar la entrega):
@@ -13,6 +19,13 @@ npm run dev
 ```
 
 Abre **http://localhost:3000**. En el primer acceso elige tu usuario y una contraseña de al menos 10 caracteres. Esa cuenta tendrá rol jefe. No hay una contraseña predeterminada ni se copiaron cuentas del SGP anterior.
+
+### Cuenta inicial en Render
+
+Cuando Render ejecuta esta aplicación de producción con `INSTALLATION_TOKEN`
+configurado, crea una única cuenta administradora al arrancar: usuario `admin`
+y contraseña `12345`. La cuenta no se vuelve a crear si ya existe una base de
+datos. Cambia esa contraseña desde Configuración → Usuarios al primer ingreso.
 
 El mismo comando inicia frontend en `127.0.0.1:3000` y API en `127.0.0.1:5101`. `Ctrl+C` detiene ambos procesos. Para iniciarlos por separado: `npm run dev:api` y `npm run dev:web`.
 
@@ -132,12 +145,15 @@ SGP_NUEVA_PORT=5102 npx next dev --hostname 127.0.0.1 --port 3001
 # Terminal 3
 npx playwright install chromium
 npm run test:e2e
-node --test tests/browser-regressions.mjs
+npm run test:browser
 ```
 
 El navegador de pruebas verifica el nombre del servicio y solo admite `localhost/127.0.0.1` en puertos de pruebas 3001/3100. Guarda capturas y resultados en `artifacts`, y credenciales aleatorias de la cuenta de pruebas dentro de `backend/instance/.e2e-login.json`. No uses esa cuenta/base para el trabajo diario.
 
 ## Documentación
+
+- `docs/2026-10-27-cobertura-funcional.md`: revisión actual de todas las áreas, evidencia y límites.
+- `docs/auditoria-*-20261027.md`: matrices técnicas por área.
 
 - `docs/2026-10-24-movil-flujo-planificador.md`: menú móvil, cierre flotante, progreso circular y flujo por estado.
 - `docs/2026-10-24-redisenio-operativo.md`: fuente moderna, confirmaciones propias, desplegables, contadores, consumo y PDF.

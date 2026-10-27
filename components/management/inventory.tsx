@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Download, History, Pencil, Plus, RefreshCw, Trash2, Upload } from 'lucide-react'
 import { api, ApiError, download, jsonRequest, upload, useResource } from '@/lib/api'
 import { confirmAction } from '@/lib/confirm'
-import { fmt } from '@/lib/domain'
+import { fmt, parseEcuadorDate } from '@/lib/domain'
 import type { Material, Movement } from '@/lib/types'
 import { useSession } from '@/components/session-provider'
 import { Button, DataState, Empty, Feedback, Heading, Metric, Modal, Panel, ScrollTable, Status, useTask } from '@/components/shared'
@@ -19,7 +19,7 @@ interface MaterialForm {
   stock_actual: string; stock_minimo: string; metros_por_rollo: string; ancho_material_cm: string; acabado: string; color: string
 }
 
-function MaterialEditor({ material, materials, onClose, onSaved }: { material: Material | null; materials: Material[]; onClose: () => void; onSaved: (message: string) => void }) {
+function MaterialEditor({ material, materials, canWrite, onClose, onSaved }: { material: Material | null; materials: Material[]; canWrite: () => boolean; onClose: () => void; onSaved: (message: string) => void }) {
   const { can } = useSession()
   const editable = can('inventario', 'editar')
   const task = useTask()
@@ -50,8 +50,9 @@ function MaterialEditor({ material, materials, onClose, onSaved }: { material: M
     if (!form.stock_minimo.trim() || !Number.isSafeInteger(minimum) || minimum < 0) { setValidation('El stock mínimo debe ser un entero mayor o igual a 0.'); return }
     const length = Number(form.metros_por_rollo || 0), width = Number(form.ancho_material_cm)
     if (rawMaterial && (!Number.isFinite(length) || length < 0)) { setValidation('Los metros por rollo deben ser un número mayor o igual a 0.'); return }
-    if (widthRequired && (!form.ancho_material_cm.trim() || !Number.isFinite(width) || width <= 0)) { setValidation('Ingresa un ancho de material mayor que 0 cm para Sustrato.'); return }
+    if (widthRequired && (!form.ancho_material_cm.trim() || !Number.isFinite(width) || width < 0)) { setValidation('Ingresa un ancho de material mayor o igual a 0 cm para Sustrato.'); return }
     if (existing && !await confirmAction(`El SKU ${existing.codigo_barras} ya existe. Se sumarán ${stock} ${existing.unidad_medida} a su stock; la ficha existente se conserva. ¿Continuar?`, { title: 'Sumar al stock existente', confirmLabel: 'Sumar stock' })) return
+    if (!canWrite()) return
     await task.run(async () => {
       const payload = {
         ...(material ? { revision } : { codigo_barras: form.codigo_barras.trim().toUpperCase() }),
@@ -131,7 +132,9 @@ function MaterialHistory({ material, materials, onClose }: { material: Material;
 export function Inventory() {
   const { can } = useSession()
   const allowed = can('inventario'), editable = can('inventario', 'editar')
+  const writeAllowed = useRef(editable); writeAllowed.current = editable
   const resource = useResource<Material[]>(allowed ? 'materiales' : null)
+  const movements = useResource<Movement[]>(allowed ? 'movimientos' : null)
   const task = useTask()
   const [search, setSearch] = useState(''), [category, setCategory] = useState(''), [type, setType] = useState(''), [status, setStatus] = useState('')
   const [page, setPage] = useState(1)
@@ -140,6 +143,8 @@ export function Inventory() {
   const [importOpen, setImportOpen] = useState(false), [importFile, setImportFile] = useState<File | null>(null)
   const [notice, setNotice] = useState('')
   const materials = resource.data || []
+  const now = Date.now(), since = now - 7 * 86400000
+  const recentMovements = movements.data?.filter(movement => { const date = parseEcuadorDate(movement.fecha)?.getTime(); return date != null && date >= since && date <= now }).length
   const query = search.trim().toLocaleLowerCase('es')
   const filtered = materials.filter(material => (!category || material.categoria === category) && (!type || material.tipo === type) && (!status || material.estado === status)
     && (!query || [material.codigo_barras, material.nombre, material.categoria, material.tipo, material.estado].some(value => value.toLocaleLowerCase('es').includes(query))))
@@ -149,7 +154,7 @@ export function Inventory() {
   useEffect(() => { setPage(current => Math.min(current, pages)) }, [pages])
 
   async function remove(material: Material) {
-    if (!editable || task.busy || !await confirmAction(`¿Eliminar ${material.codigo_barras} · ${material.nombre}? No se pueden eliminar materiales vinculados al catálogo o con movimientos.`, { title: 'Eliminar material', confirmLabel: 'Eliminar', danger: true })) return
+    if (!writeAllowed.current || task.busy || !await confirmAction(`¿Eliminar ${material.codigo_barras} · ${material.nombre}? No se pueden eliminar materiales vinculados al catálogo o con movimientos.`, { title: 'Eliminar material', confirmLabel: 'Eliminar', danger: true }) || !writeAllowed.current) return
     setNotice('')
     await task.run(async () => {
       const result = await api<{ mensaje: string }>(`materiales/${material.id}`, jsonRequest('DELETE'))
@@ -161,6 +166,7 @@ export function Inventory() {
     event.preventDefault()
     if (!editable || task.busy || !importFile) return
     if (!await confirmAction('La importación suma stock a los SKU existentes. Volver a importar el mismo archivo suma esas cantidades otra vez. ¿Continuar?', { title: 'Importar inventario', confirmLabel: 'Importar' })) return
+    if (!writeAllowed.current) return
     setNotice('')
     await task.run(async () => {
       const result = await upload<{ mensaje: string; creados: number; actualizados: number; omitidos: number }>('importar/excel', importFile)
@@ -177,11 +183,13 @@ export function Inventory() {
       {editable && <><Button disabled={task.busy} onClick={() => { task.clear(); setNotice(''); setImportFile(null); setImportOpen(true) }}><Upload /> Importar Excel</Button><Button variant="primary" disabled={task.busy} onClick={() => { task.clear(); setNotice(''); setEditor({ material: null }) }}><Plus /> Nuevo material</Button></>}
     </>} />
     <Feedback task={{ error: task.error, success: notice || task.success }} />
+    <DataState resource={movements} />
     <div className="metrics-grid">
       <Metric label="Referencias" value={resource.data ? fmt(materials.length, 0) : '—'} note="Inventario completo" />
       <Metric label="Críticos / agotados" value={resource.data ? fmt(materials.filter(material => ['Crítico', 'Agotado'].includes(material.estado)).length, 0) : '—'} tone="rose" />
       <Metric label="Stock materia prima" value={resource.data ? fmt(materials.filter(material => material.categoria === 'Materia Prima').reduce((total, material) => total + material.stock_actual, 0), 0) : '—'} note="Rollos" tone="green" />
       <Metric label="Stock tintas / herramientas" value={resource.data ? fmt(materials.filter(material => ['Tintas', 'Herramientas'].includes(material.categoria)).reduce((total, material) => total + material.stock_actual, 0), 0) : '—'} note="Unidades" tone="amber" />
+      <Metric label="Movimientos (7 días)" value={recentMovements == null ? '—' : fmt(recentMovements, 0)} note="Entre los últimos 50 registros · Historial parcial" />
     </div>
     {!editable && <p className="subtle">Solo consulta. Editar e importar requiere permiso de edición de Inventario.</p>}
     <Panel className="table-card">
@@ -192,7 +200,7 @@ export function Inventory() {
           <label className="bodega-filter">Tipo<select value={type} onChange={event => setType(event.target.value)}><option value="">Todos</option>{Array.from(new Set(['Sustrato', 'Tinta', 'Cinta', ...materials.map(material => material.tipo)])).map(value => <option key={value}>{value}</option>)}</select></label>
           <label className="bodega-filter">Estado<select value={status} onChange={event => setStatus(event.target.value)}><option value="">Todos</option>{Array.from(new Set(['Disponible', 'Bajo', 'Crítico', 'Agotado', ...materials.map(material => material.estado)])).map(value => <option key={value}>{value}</option>)}</select></label>
         </div>
-        <Button disabled={resource.loading || task.busy} onClick={() => void resource.reload()}><RefreshCw /> Actualizar</Button>
+        <Button disabled={resource.loading || task.busy} onClick={() => { void resource.reload(); void movements.reload() }}><RefreshCw /> Actualizar</Button>
         {(search || category || type || status) && <Button onClick={() => { setSearch(''); setCategory(''); setType(''); setStatus('') }}>Limpiar filtros</Button>}
       </div>
       <DataState resource={resource} />
@@ -208,6 +216,7 @@ export function Inventory() {
           <td><Status value={material.estado} /></td>
           <td><details className="bodega-details"><summary>Ver ficha</summary><dl>
             <dt>Proveedor</dt><dd>{material.proveedor || '—'}</dd><dt>Clasificación</dt><dd>{material.clasificacion || '—'}</dd>
+            <dt>Stock crítico</dt><dd>{fmt(material.stock_critico)} {material.unidad_medida}</dd>
             <dt>Metros / rollo</dt><dd>{material.categoria === 'Materia Prima' ? fmt(material.metros_por_rollo) : 'No aplica'}</dd>
             <dt>Ancho (cm)</dt><dd>{material.ancho_material_cm == null ? '—' : fmt(material.ancho_material_cm)}</dd>
             <dt>Acabado</dt><dd>{material.acabado || '—'}</dd><dt>Color</dt><dd>{material.color || '—'}</dd>
@@ -220,11 +229,15 @@ export function Inventory() {
       </table></ScrollTable>)}
       {resource.data && <div className="bodega-pagination"><p className="subtle">{filtered.length ? `${(activePage - 1) * PAGE_SIZE + 1}–${Math.min(activePage * PAGE_SIZE, filtered.length)} de ${filtered.length}` : '0 resultados'} · {PAGE_SIZE} por página</p><div className="bodega-actions"><Button disabled={activePage <= 1} onClick={() => setPage(activePage - 1)}>Anterior</Button><span className="subtle" aria-live="polite">Página {activePage} de {pages}</span><Button disabled={activePage >= pages} onClick={() => setPage(activePage + 1)}>Siguiente</Button></div></div>}
     </Panel>
-    {editor && editable && <MaterialEditor key={editor.material?.id ?? 'new'} material={editor.material} materials={materials} onClose={() => setEditor(null)} onSaved={message => { setEditor(null); setNotice(message); void resource.reload() }} />}
+    {editor && editable && <MaterialEditor key={editor.material?.id ?? 'new'} material={editor.material} materials={materials} canWrite={() => writeAllowed.current} onClose={() => setEditor(null)} onSaved={message => { setEditor(null); setNotice(message); void resource.reload() }} />}
     {historyMaterial && <MaterialHistory material={historyMaterial} materials={materials} onClose={() => setHistoryMaterial(null)} />}
     {importOpen && editable && <Modal title="Importar inventario desde Excel" onClose={() => { if (!task.busy) setImportOpen(false) }}>
       <div className="bodega"><p className="bodega-note">Importar suma stock a los SKU existentes. Repetir el archivo vuelve a sumar las cantidades. Revisa las filas omitidas al terminar.</p>
-        <Feedback task={task} /><form onSubmit={event => void importExcel(event)} aria-busy={task.busy}><div className="form-grid"><label className="wide">Archivo Excel (.xlsx / .xlsm)<input type="file" accept=".xlsx,.xlsm" disabled={task.busy} onChange={event => setImportFile(event.target.files?.[0] || null)} required /></label></div><p className="subtle">Columnas obligatorias: SKU (código) y Nombre. La exportación sirve de referencia para las demás columnas.</p><div className="modal-actions"><Button disabled={task.busy} onClick={() => setImportOpen(false)}>Cancelar</Button><Button type="submit" variant="primary" disabled={task.busy || !importFile}>{task.busy ? 'Importando…' : 'Importar y sumar stock'}</Button></div></form>
+        <Feedback task={task} /><form onSubmit={event => void importExcel(event)} aria-busy={task.busy}>
+          <div className="bodega-file-drop" onDragOver={event => event.preventDefault()} onDrop={event => { event.preventDefault(); if (!task.busy && writeAllowed.current && event.dataTransfer.files[0]) { setImportFile(event.dataTransfer.files[0]); task.clear() } }}>
+            <p className="subtle">Arrastra el Excel aquí o elige un archivo.</p><div className="form-grid"><label className="wide">Archivo Excel (.xlsx / .xlsm)<input type="file" accept=".xlsx,.xlsm" disabled={task.busy} onChange={event => { setImportFile(event.target.files?.[0] || null); task.clear() }} required={!importFile} /></label></div>
+            {importFile && <p className="subtle">{importFile.name} · {(importFile.size / 1024).toFixed(1)} KB</p>}
+          </div><p className="subtle">Columnas obligatorias: SKU (código) y Nombre. La exportación sirve de referencia para las demás columnas.</p><div className="modal-actions"><Button disabled={task.busy} onClick={() => setImportOpen(false)}>Cancelar</Button><Button type="submit" variant="primary" disabled={task.busy || !importFile}>{task.busy ? 'Importando…' : 'Importar y sumar stock'}</Button></div></form>
       </div>
     </Modal>}
   </div>

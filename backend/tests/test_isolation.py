@@ -26,6 +26,29 @@ def test_ignores_inherited_configuration(storage, monkeypatch):
         db.engine.dispose()
 
 
+def test_render_bootstrap_creates_requested_admin_once(storage, monkeypatch):
+    monkeypatch.setenv('RENDER', 'true')
+    monkeypatch.setenv('INSTALLATION_TOKEN', 'render-installation-token')
+    from app import create_app
+    from app.extensions import db
+    from app.models import Usuario
+
+    app = create_app()
+    with app.app_context():
+        user = Usuario.query.one()
+        assert user.username == 'admin'
+        assert user.rol == 'admin'
+        assert user.check_password('12345')
+        db.session.remove()
+        db.engine.dispose()
+
+    restarted = create_app()
+    with restarted.app_context():
+        assert Usuario.query.count() == 1
+        db.session.remove()
+        db.engine.dispose()
+
+
 def test_default_database_and_persistent_private_secret(storage, monkeypatch):
     from config import Config
     monkeypatch.delenv('SGP_NUEVA_DATABASE_URL')

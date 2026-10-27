@@ -63,16 +63,21 @@ export function Operations() {
     locked.current = true
     try {
       await task.run(async () => {
-        const response = await api<{ mensaje: string; material: Material; movimiento: Movement }>('movimientos', jsonRequest('POST', {
-          codigo_barras: code, tipo_movimiento: type, cantidad: amount, observacion: observation.trim(),
-        }))
-        setReceipt(`${response.movimiento.tipo_movimiento} registrada: ${fmt(response.movimiento.cantidad, 0)} ${response.material.unidad_medida} de ${response.material.nombre}. Stock actual: ${fmt(response.material.stock_actual, 0)} ${response.material.unidad_medida}.`)
-        setQuickCode(''); setManualCode(''); setQuantity('1'); setObservation('')
-        restoreFocus.current = true
-        // Refresh errors remain visible on their respective resources; a saved
-        // movement must never be offered again merely because its GET failed.
-        void history.reload(); void materials.reload()
-        return response
+        try {
+          const response = await api<{ mensaje: string; material: Material; movimiento: Movement }>('movimientos', jsonRequest('POST', {
+            codigo_barras: code, tipo_movimiento: type, cantidad: amount, observacion: observation.trim(),
+          }))
+          setReceipt(`${response.movimiento.tipo_movimiento} registrada: ${fmt(response.movimiento.cantidad, 0)} ${response.material.unidad_medida} de ${response.material.nombre}. Stock actual: ${fmt(response.material.stock_actual, 0)} ${response.material.unidad_medida}.`)
+          setQuickCode(''); setManualCode(''); setQuantity('1'); setObservation('')
+          restoreFocus.current = true
+          // Refresh errors remain visible on their respective resources; a saved
+          // movement must never be offered again merely because its GET failed.
+          void history.reload(); void materials.reload()
+          return response
+        } catch (reason) {
+          if (mode === 'quick') { setQuickCode(''); restoreFocus.current = true }
+          throw reason
+        }
       }, 'Movimiento registrado.')
     } finally { locked.current = false }
   }
@@ -108,7 +113,7 @@ export function Operations() {
           <form onSubmit={event => void register(event, 'manual')} aria-busy={task.busy}>
             <div className="form-grid">
               <label className="wide">Código de barras / SKU
-                <input value={manualCode} onChange={event => setManualCode(event.target.value)} onFocus={() => { if (!manualCode) setQuantity('') }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (!task.busy) quantityInput.current?.focus() } }} readOnly={task.busy} list="bodega-material-options" autoComplete="off" spellCheck={false} required />
+                <input value={manualCode} onChange={event => setManualCode(event.target.value)} onFocus={() => { if (!task.busy) setQuantity('') }} onKeyDown={event => { if (event.key === 'Enter') { event.preventDefault(); if (!task.busy) quantityInput.current?.focus() } }} readOnly={task.busy} list="bodega-material-options" autoComplete="off" spellCheck={false} required />
               </label>
               <label>Cantidad{selectedMaterial?.unidad_medida ? ` (${selectedMaterial.unidad_medida})` : ''}
                 <input ref={quantityInput} type="number" min="1" step="1" value={quantity} onChange={event => setQuantity(event.target.value)} readOnly={task.busy} required />

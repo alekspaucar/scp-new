@@ -60,7 +60,7 @@ test('an employee granted Configuration editing can create products and clients'
     assert.equal((await admin.request.put(`/api/usuarios/${usuario.id}/permisos`, { data: { permisos: permissions } })).status(), 200)
     assert.equal((await context.request.post('/api/login', { data: { username, password } })).status(), 200)
     await page.goto('/configuracion')
-    await page.getByRole('heading', { name: 'Catálogo', exact: true }).waitFor()
+    await page.getByRole('heading', { name: 'Catálogo de productos', exact: true }).waitFor()
     assert.equal(await page.getByRole('button', { name: 'Nuevo producto', exact: true }).isVisible(), true)
     await page.goto('/clientes')
     await page.getByRole('heading', { name: 'Clientes', exact: true }).first().waitFor()
@@ -101,7 +101,7 @@ test('editing a stale material preserves a movement and keeps the supplier draft
     const rejected = page.waitForResponse(response => response.url().includes(`/api/materiales/${material.material.id}`) && response.request().method() === 'PUT' && response.status() === 409)
     await page.getByRole('button', { name: 'Guardar material', exact: true }).click(); await rejected
     assert.equal(await page.getByLabel('Proveedor', { exact: true }).inputValue(), 'PROVEEDOR DEL BORRADOR')
-    await page.getByRole('button', { name: 'Usar saldo actual y conservar los demás cambios', exact: true }).click()
+    await page.getByRole('button', { name: 'Usar saldo actual', exact: true }).click()
     assert.equal(await page.getByLabel('Stock actual (rollos)', { exact: true }).inputValue(), '18')
     const saved = page.waitForResponse(response => response.url().includes(`/api/materiales/${material.material.id}`) && response.request().method() === 'PUT' && response.status() === 200)
     await page.getByRole('button', { name: 'Guardar material', exact: true }).click(); await saved
@@ -129,13 +129,101 @@ test('a stale order cannot delete a newer item or its partial delivery', async (
     assert.equal((await context.request.post(`/api/pedidos/${pedido.id}/items/${added.id}/entregas`, { data: { cantidad_entregada: 10 } })).status(), 200)
     await page.getByRole('button', { name: 'Revisar pedido', exact: true }).click()
     const rejected = page.waitForResponse(response => response.url().endsWith(`/api/pedidos/${pedido.id}`) && response.request().method() === 'PUT' && response.status() === 409)
-    await page.getByRole('button', { name: 'Confirmar y guardar', exact: true }).click(); await rejected
+    await page.getByRole('button', { name: 'Confirmar y guardar', exact: true }).click()
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Guardar correcciones', exact: true }).click()
+    await rejected
     await page.getByRole('alert').filter({ hasText: 'El pedido cambió desde que abriste este borrador.' }).waitFor()
     assert.equal(await page.getByRole('button', { name: 'Reintentar guardar', exact: true }).isEnabled(), false)
     const current = await (await context.request.get(`/api/pedidos/${pedido.id}`)).json()
     assert.equal(current.items.length, 2); assert.equal(current.items.find(item => item.id === added.id).cantidad_entregada_total, 10)
     await page.getByRole('button', { name: 'Recargar pedido y descartar este borrador', exact: true }).click()
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Recargar y descartar', exact: true }).click()
     await page.getByLabel('Código del ítem 2', { exact: true }).waitFor()
     assert.equal(await page.getByLabel('Código del ítem 2', { exact: true }).inputValue(), 'CONC-2')
+  } finally { await context.close() }
+})
+
+test('a read-only order user sees its reference without catalogue permission', async () => {
+  const admin = await browser.newContext({ baseURL: base }), context = await browser.newContext({ baseURL: base }), page = await context.newPage()
+  const suffix = Date.now(), cliente = `REFERENCIA QA ${suffix}`, code = `REF-${suffix}`, oc = `REF-OC-${suffix}`
+  try {
+    assert.equal((await admin.request.post('/api/login', { data: credentials })).status(), 200)
+    const created = await admin.request.post('/api/catalogo', { data: { codigo: code, cliente, descripcion: 'REFERENCIA VISIBLE', tiempo_base_minutos: 1 } })
+    const { producto } = await created.json(); assert.ok(producto?.id)
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aE1sAAAAASUVORK5CYII=', 'base64')
+    const upload = await admin.request.post(`/api/catalogo/${producto.id}/imagen`, { multipart: { archivo: { name: 'referencia.png', mimeType: 'image/png', buffer: png } } })
+    assert.ok(upload.ok(), await upload.text())
+    const orderResponse = await admin.request.post('/api/pedidos', { data: { cliente, orden_compra: oc, fecha_entrega: '2090-01-01T12:00', items: [{ codigo: code, descripcion: 'REFERENCIA VISIBLE', cantidad: 100 }] } })
+    assert.equal(orderResponse.status(), 201)
+    const password = 'ClaveReferenciaSoloPruebas-2026', username = `ref-${suffix}`
+    const account = await (await admin.request.post('/api/usuarios', { data: { username, password, rol: 'empleado' } })).json()
+    const permisos = Object.fromEntries(['pedidos', 'produccion', 'operaciones', 'inventario', 'reportes', 'configuracion', 'calculadora'].map(key => [key, key === 'pedidos' ? 'ver' : 'ninguno']))
+    assert.equal((await admin.request.put(`/api/usuarios/${account.usuario.id}/permisos`, { data: { permisos } })).status(), 200)
+    assert.equal((await context.request.post('/api/login', { data: { username, password } })).status(), 200)
+    assert.equal((await context.request.get('/api/catalogo')).status(), 403)
+    const catalogRequests = []
+    page.on('request', request => { if (request.url().endsWith('/api/catalogo')) catalogRequests.push(request.url()) })
+    await page.goto('/pedidos')
+    await page.getByLabel('Buscar', { exact: true }).fill(oc)
+    await page.getByRole('row').filter({ hasText: oc }).getByRole('button', { name: 'Detalle', exact: true }).click()
+    await page.getByText('Referencia del producto', { exact: true }).click()
+    const reference = page.getByRole('img', { name: 'Referencia de REFERENCIA VISIBLE', exact: true })
+    await reference.waitFor()
+    assert.ok(await reference.evaluate(image => image.complete && image.naturalWidth > 0))
+    assert.deepEqual(catalogRequests, [], 'No debe conceder ni consultar el catálogo completo para ver una referencia de un pedido')
+  } finally { await context.close(); await admin.close() }
+})
+
+test('a confirmed partial cannot overwrite a concurrent suspension', async () => {
+  const context = await browser.newContext({ baseURL: base }), page = await context.newPage()
+  const oc = `PARCIAL-CONC-${Date.now()}`
+  try {
+    assert.equal((await context.request.post('/api/login', { data: credentials })).status(), 200)
+    const created = await (await context.request.post('/api/pedidos', { data: { cliente: 'PARCIALES QA', orden_compra: oc, fecha_entrega: '2090-01-01T12:00', items: [{ codigo: 'S/C', descripcion: 'SALIDA CONCURRENTE', cantidad: 100 }] } })).json()
+    const order = created.pedido, item = order.items[0], path = `/api/pedidos/${order.id}/items/${item.id}`
+    assert.equal((await context.request.put(`/api/pedidos/${order.id}/estado`, { data: { estado: 'Procesando' } })).status(), 200)
+    assert.equal((await context.request.patch(`${path}/modo-parcial`, { data: { activo: true } })).status(), 200)
+    await page.goto('/pedidos')
+    await page.getByLabel('Buscar', { exact: true }).fill(oc)
+    await page.getByRole('row').filter({ hasText: oc }).getByRole('button', { name: 'Detalle', exact: true }).click()
+    await page.getByRole('button', { name: 'Entrega', exact: true }).click()
+    await page.getByLabel('Cantidad de salida', { exact: true }).fill('100')
+    await page.getByRole('button', { name: 'Registrar entrega parcial', exact: true }).click()
+    await page.getByRole('alertdialog').waitFor()
+    assert.equal((await context.request.put(`${path}/estado`, { data: { estado: 'suspendido', observacion: 'Suspensión concurrente de verificación' } })).status(), 200)
+    const response = page.waitForResponse(response => response.url().endsWith(`${path}/entregas`) && response.request().method() === 'POST')
+    await page.getByRole('alertdialog').getByRole('button', { name: 'Registrar entrega', exact: true }).click()
+    assert.equal((await response).status(), 409)
+    const current = (await (await context.request.get(`/api/pedidos/${order.id}`)).json()).items[0]
+    assert.equal(current.estado_item, 'suspendido')
+    assert.equal(current.cantidad_entregada_total, 0)
+  } finally { await context.close() }
+})
+
+test('an authenticated account change discards the previous account workspace and drafts', async () => {
+  const context = await browser.newContext({ baseURL: base }), page = await context.newPage()
+  try {
+    assert.equal((await context.request.post('/api/login', { data: credentials })).status(), 200)
+    const next = { username: `cuenta-b-${Date.now()}`, password: 'OtraCuentaSoloPruebas-2026', rol: 'jefe' }
+    assert.ok((await context.request.post('/api/usuarios', { data: next })).ok())
+    await page.goto('/pedidos')
+    await page.getByRole('button', { name: 'Nuevo pedido', exact: true }).click()
+    await page.getByLabel(/^Cliente/).fill('BORRADOR PRIVADO DE LA CUENTA ANTERIOR')
+    assert.equal((await context.request.post('/api/login', { data: next })).status(), 200)
+    await page.evaluate(() => window.dispatchEvent(new Event('sgp:session-change')))
+    await page.locator('.profile strong').filter({ hasText: next.username }).waitFor()
+    assert.equal(await page.getByRole('dialog', { name: 'Nuevo pedido', exact: true }).count(), 0)
+  } finally { await context.close() }
+})
+
+test('original new-order and edit URLs open their authorized forms', async () => {
+  const context = await browser.newContext({ baseURL: base }), page = await context.newPage()
+  try {
+    assert.equal((await context.request.post('/api/login', { data: credentials })).status(), 200)
+    const { pedido } = await (await context.request.post('/api/pedidos', { data: { cliente: 'ENLACES QA', orden_compra: `ENLACE-${Date.now()}`, fecha_entrega: '2090-01-01T12:00', items: [{ codigo: 'S/C', descripcion: 'PRUEBA DE ENLACE', cantidad: 100 }] } })).json()
+    await page.goto(`/pedidos/nuevo?editar=${pedido.id}`)
+    await page.getByRole('dialog', { name: `Editar pedido #${pedido.id}`, exact: true }).waitFor({ timeout: 8000 })
+    await page.goto('/pedidos/nuevo')
+    await page.getByRole('dialog', { name: 'Nuevo pedido', exact: true }).waitFor({ timeout: 8000 })
   } finally { await context.close() }
 })

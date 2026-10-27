@@ -22,6 +22,7 @@
 .management-form fieldset:disabled { opacity: .7; }
 .management-form .form-grid { margin-top: 1rem; }
 .management-form textarea { min-height: 80px; resize: vertical; }
+.management-dropzone { border: 1px dashed rgba(148,163,184,.55); border-radius: 12px; padding: 1rem; margin-top: 1rem; }
 .management-form .modal-actions { flex-wrap: wrap; }
 .management-form input[type="checkbox"] { width: 17px; height: 17px; }
 .management-check { display: flex; align-items: center; gap: .5rem; margin: 1rem 0; font-size: 12px; }

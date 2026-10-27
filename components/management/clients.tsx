@@ -20,6 +20,7 @@ export function Clients({ active = true }: { active?: boolean }) {
   const { can } = useSession()
   const readable = can('configuracion') || can('pedidos') || can('produccion') || can('reportes')
   const editable = can('configuracion', 'editar')
+  const writeAllowed = useRef(editable); writeAllowed.current = editable
   const resource = useResource<Client[]>(active && readable ? 'clientes' : null)
   const task = useTask(), counter = useRef(0)
   const [search, setSearch] = useState(''), [drafts, setDrafts] = useState<Record<string, Draft>>({})
@@ -60,13 +61,16 @@ export function Clients({ active = true }: { active?: boolean }) {
     let current = { ...input, value: { ...input.value }, error: '' }
     let savedThisAttempt = false
     try {
-      if (!editable) throw new Error('No tienes permiso para modificar clientes.')
+      if (!writeAllowed.current) throw new Error('No tienes permiso para modificar clientes.')
       const result = await api<{ cliente: Client }>(current.value.id ? `clientes/${current.value.id}` : 'clientes', jsonRequest(current.value.id ? 'PUT' : 'POST', payload(current.value)))
       current = { ...current, value: result.cliente, savedBase: true }
       savedThisAttempt = true
       setDrafts(previous => ({ ...previous, [current.key]: current }))
       setEditor(previous => previous?.key === current.key ? current : previous)
-      if (current.file) await upload(`clientes/${current.value.id}/logo`, current.file)
+      if (current.file) {
+        if (!writeAllowed.current) throw new Error('Ya no tienes permiso para modificar el logo.')
+        await upload(`clientes/${current.value.id}/logo`, current.file)
+      }
       return current
     } catch (reason) {
       current = { ...current, error: `${savedThisAttempt ? 'Datos guardados; queda pendiente completar el logo. ' : ''}${message(reason)}` }
@@ -77,7 +81,7 @@ export function Clients({ active = true }: { active?: boolean }) {
   }
   async function saveOne(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!editor || !editable) return
+    if (!editor || !writeAllowed.current || task.busy) return
     const current = editor
     if ((event.nativeEvent as SubmitEvent).submitter?.getAttribute('value') === 'draft') {
       try { payload(current.value) } catch (reason) { setEditor({ ...current, error: message(reason) }); return }
@@ -87,7 +91,7 @@ export function Clients({ active = true }: { active?: boolean }) {
   }
   async function saveBatch() {
     const pending = Object.values(drafts).filter(d => selected.has(d.key))
-    if (!editable || !pending.length) return
+    if (!writeAllowed.current || task.busy || !pending.length) return
     await task.run(async () => {
       const successes: string[] = []; let failures = 0
       for (const draft of pending) { try { await persist(draft); successes.push(draft.key) } catch { failures++ } }
@@ -97,11 +101,11 @@ export function Clients({ active = true }: { active?: boolean }) {
     }, 'Borradores seleccionados guardados.')
   }
   async function remove(targets: Draft[]) {
-    if (!editable || !targets.length || !await confirmAction(`¿Eliminar definitivamente ${targets.length} cliente(s) guardados?`, { title: 'Eliminar clientes', confirmLabel: 'Eliminar', danger: true })) return
+    if (!writeAllowed.current || task.busy || !targets.length || !await confirmAction(`¿Eliminar definitivamente ${targets.length} cliente(s)?`, { title: 'Eliminar clientes', confirmLabel: 'Eliminar', danger: true }) || !writeAllowed.current) return
     await task.run(async () => {
       let failures = 0, successes = 0
       for (const row of targets) {
-        try { if (row.value.id) await api(`clientes/${row.value.id}`, { method: 'DELETE' }); clearDraft(row.key); toggle(row.key, false); successes++ }
+        try { if (!writeAllowed.current) throw new Error('Ya no tienes permiso para eliminar clientes.'); if (row.value.id) await api(`clientes/${row.value.id}`, { method: 'DELETE' }); clearDraft(row.key); toggle(row.key, false); successes++ }
         catch (reason) { failures++; setErrors(previous => ({ ...previous, [row.key]: message(reason) })) }
       }
       await resource.reload()

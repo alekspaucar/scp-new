@@ -1,3 +1,6 @@
+import os
+import hmac
+
 from ipaddress import ip_address
 from urllib.parse import urlsplit
 from flask import Blueprint, request, jsonify, session
@@ -7,6 +10,7 @@ from sqlalchemy.exc import OperationalError
 from ..extensions import db
 from ..models import Usuario
 from ..permisos import usuario_a_dict
+
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -31,17 +35,26 @@ def estado_instalacion():
 
 @auth_bp.post('/api/instalacion')
 def configurar_instalacion():
-    # Do not trust forwarded IPs. The local Next.js proxy preserves Origin.
-    origin = request.headers.get('Origin')
-    try:
-        local_origin = not origin or (urlsplit(origin).scheme in ('http', 'https')
-                                     and _loopback(urlsplit(origin).hostname))
-        host = urlsplit('http://' + request.host).hostname
-    except ValueError:
-        local_origin, host = False, None
-    if not (_loopback(request.remote_addr) and _loopback(host) and local_origin):
-        return jsonify({'error': 'La instalación inicial solo está disponible en localhost'}), 403
     data = request.get_json(silent=True)
+
+    expected_token = os.environ.get('INSTALLATION_TOKEN', '')
+    provided_token = request.headers.get('X-Installation-Token', '')
+
+    if expected_token:
+        if not hmac.compare_digest(provided_token, expected_token):
+            return jsonify({'error': 'Token de instalación inválido'}), 403
+    else:
+        # Local installations retain the original loopback-only setup gate.
+        origin = request.headers.get('Origin')
+        try:
+            local_origin = not origin or (urlsplit(origin).scheme in ('http', 'https')
+                                         and _loopback(urlsplit(origin).hostname))
+            host = urlsplit('http://' + request.host).hostname
+        except ValueError:
+            local_origin, host = False, None
+        if not (_loopback(request.remote_addr) and _loopback(host) and local_origin):
+            return jsonify({'error': 'La instalación inicial solo está disponible en localhost'}), 403
+
     if not isinstance(data, dict) or not isinstance(data.get('username'), str) or not isinstance(data.get('password'), str):
         return jsonify({'error': 'Usuario y contraseña deben ser texto'}), 400
     username, password = data['username'].strip(), data['password']

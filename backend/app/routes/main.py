@@ -86,6 +86,31 @@ def _comprobar_revision(data, recurso):
     return None
 
 
+def _comprobar_estado_pedido(data, pedido):
+    # Compatibilidad: sin precondición explícita se conserva el flujo original.
+    if not isinstance(data, dict):
+        return None
+    if 'estado_pedido_esperado' in data:
+        esperado = data['estado_pedido_esperado']
+        if not isinstance(esperado, str) or esperado not in ESTADOS_PEDIDO:
+            return jsonify({'error': 'estado_pedido_esperado debe ser un estado de pedido válido.',
+                            'codigo': 'estado_pedido_esperado_invalido'}), 400
+        if pedido.estado != esperado:
+            return jsonify({'error': 'El estado del pedido cambió. Actualiza los datos antes de modificar sus ítems.',
+                            'codigo': 'estado_pedido_desactualizado',
+                            'estado_actual': pedido.estado}), 409
+    if 'revision_pedido_esperada' in data:
+        revision = data['revision_pedido_esperada']
+        if type(revision) is not int or revision < 1:
+            return jsonify({'error': 'revision_pedido_esperada debe ser un entero positivo.',
+                            'codigo': 'revision_invalida'}), 400
+        if revision != pedido.revision:
+            return jsonify({'error': 'El pedido cambió. Actualiza los datos antes de modificar sus ítems.',
+                            'codigo': 'revision_desactualizada',
+                            'revision_actual': pedido.revision}), 409
+    return None
+
+
 @main_bp.before_request
 def autorizar_seccion():
     if request.method == 'OPTIONS':
@@ -285,10 +310,10 @@ def _rango_fechas():
     try:
         desde = datetime.fromisoformat(desde_str) if desde_str else None
         hasta = datetime.fromisoformat(hasta_str) if hasta_str else None
-    except ValueError:
+        if hasta and hasta.time() == datetime.min.time():
+            hasta = hasta + timedelta(days=1)
+    except (ValueError, OverflowError):
         raise ValueError('Formato de fecha inválido — usar ISO (YYYY-MM-DD)')
-    if hasta and hasta.time() == datetime.min.time():
-        hasta = hasta + timedelta(days=1)
     return desde, hasta
 
 
@@ -323,6 +348,7 @@ def movimiento_a_dict(mov):
         'fecha': _fmt_fecha(mov.fecha),
         'sku': mov.material.codigo_barras if mov.material else 'N/A',
         'nombre_material': mov.material.nombre if mov.material else 'Material eliminado',
+        'unidad_medida': mov.material.unidad_medida if mov.material else None,
         'tipo_movimiento': mov.tipo_movimiento,
         'cantidad': mov.cantidad,
         'observacion': mov.observacion,
@@ -389,10 +415,10 @@ def faltante_a_dict(f):
     }
 
 
-def pedido_a_dict(p):
+def pedido_a_dict(p, incluir_referencias=False):
     items_dict = []
     tiene_faltantes_activos = False
-    for i in p.items:
+    for indice, i in enumerate(p.items):
         item_faltantes = [faltante_a_dict(f) for f in getattr(i, 'faltantes', [])]
         item_tiene_faltantes = any(not f['resuelto'] for f in item_faltantes)
         if item_tiene_faltantes:
@@ -416,6 +442,18 @@ def pedido_a_dict(p):
             'cantidad_entregada_total': sum(
                 e.cantidad_entregada for e in i.entregas)
         })
+        # Las referencias solo se resuelven en el detalle, con coste acotado.
+        # Sin coincidencia única del cliente, no elegir un producto arbitrario.
+        if incluir_referencias and indice < 50:
+            items_dict[-1].update({'imagen_url': None, 'imagen_referencia': None, 'material_sku': None})
+            catalogo = _catalogo_item(i, p.cliente)
+            if catalogo is not None:
+                items_dict[-1].update({
+                    'imagen_url': (f'/uploads/catalogo/{catalogo.imagen_referencia}'
+                                   if catalogo.imagen_referencia else None),
+                    'imagen_referencia': catalogo.imagen_referencia,
+                    'material_sku': catalogo.material.codigo_barras if catalogo.material else None,
+                })
 
     return {
         'id': p.id,
@@ -429,6 +467,7 @@ def pedido_a_dict(p):
         'total_items': p.total_items,
         'total_unidades': p.total_unidades,
         'fecha_entregado': _fmt_fecha(p.fecha_entregado),
+        'observacion_retroceso': p.observacion_retroceso,
         'progreso': _progreso_pedido(p),
         'tiene_faltantes_activos': tiene_faltantes_activos,
         'maquina_asignada': p.maquina_asignada,
@@ -730,6 +769,13 @@ def _validar_items_pedido(items_data, conservar_ids=False):
     return items
 
 
+def _validar_tipos_cabecera_pedido(data):
+    if data.get('cliente') is not None and type(data['cliente']) not in (str, int):
+        raise ValueError('cliente debe ser un nombre o ID de cliente')
+    if data.get('fecha_entrega') is not None and not isinstance(data['fecha_entrega'], str):
+        raise ValueError('fecha_entrega debe ser texto')
+
+
 @main_bp.route('/api/pedidos', methods=['GET'])
 @login_required
 def get_pedidos():
@@ -749,6 +795,7 @@ def crear_pedido():
         return jsonify({'error': 'No tienes permisos para crear pedidos'}), 403
     try:
         data = request.get_json() or {}
+        _validar_tipos_cabecera_pedido(data)
         cliente_raw = data.get('cliente')
         if cliente_raw is None or (isinstance(cliente_raw, str) and not cliente_raw.strip()):
             return jsonify({'error': 'El cliente es obligatorio'}), 400
@@ -960,7 +1007,7 @@ def get_pedido(pedido_id):
                                   selectinload(Pedido.items).selectinload(PedidoItem.faltantes)))
     if not pedido:
         return jsonify({'error': 'Pedido no encontrado'}), 404
-    return jsonify(pedido_a_dict(pedido))
+    return jsonify(pedido_a_dict(pedido, incluir_referencias=True))
 
 
 @main_bp.route('/api/pedidos/<int:pedido_id>', methods=['PUT'])
@@ -978,6 +1025,7 @@ def editar_pedido(pedido_id):
         conflicto = _comprobar_revision(data, pedido)
         if conflicto is not None:
             return conflicto
+        _validar_tipos_cabecera_pedido(data)
         cliente_raw = data.get('cliente')
         cliente_nombre = None
         if isinstance(cliente_raw, int) or (isinstance(cliente_raw, str) and cliente_raw.isdigit()):
@@ -1174,6 +1222,9 @@ def actualizar_estado_item(pedido_id, item_id):
         return jsonify({'error': 'Ítem no encontrado en este pedido'}), 404
     try:
         data = request.get_json() or {}
+        conflicto = _comprobar_estado_pedido(data, pedido)
+        if conflicto is not None:
+            return conflicto
         nuevo = (data.get('estado') or '').strip()
         if nuevo not in ESTADOS_ITEM_PEDIDO:
             return jsonify({'error': (
@@ -1235,6 +1286,9 @@ def registrar_entrega_item(pedido_id, item_id):
         return jsonify({'error': 'Ítem no encontrado en este pedido'}), 404
     try:
         data = request.get_json() or {}
+        conflicto = _comprobar_estado_pedido(data, pedido)
+        if conflicto is not None:
+            return conflicto
         cantidad = _entero(data.get('cantidad_entregada'),
                            'cantidad_entregada', minimo=1)
         observacion = (data.get('observacion') or '').strip() or None
@@ -1286,6 +1340,9 @@ def eliminar_entrega_item(pedido_id, item_id, entrega_id):
     if not entrega or entrega.item_id != item_id:
         return jsonify({'error': 'Movimiento de entrega no encontrado'}), 404
     try:
+        conflicto = _comprobar_estado_pedido(request.get_json(silent=True), pedido)
+        if conflicto is not None:
+            return conflicto
         db.session.delete(entrega)
         db.session.flush()
 
@@ -1329,7 +1386,12 @@ def cambiar_modo_parcial_item(pedido_id, item_id):
         return jsonify({'error': 'Ítem no encontrado en este pedido'}), 404
     try:
         data = request.get_json() or {}
-        item.modo_entregas_parciales = bool(data.get('activo'))
+        conflicto = _comprobar_estado_pedido(data, pedido)
+        if conflicto is not None:
+            return conflicto
+        if type(data.get('activo')) is not bool:
+            raise ValueError('activo debe ser true o false')
+        item.modo_entregas_parciales = data['activo']
         db.session.commit()
         estado = 'activado' if item.modo_entregas_parciales else 'desactivado'
         return jsonify({
@@ -1472,7 +1534,10 @@ def _parse_entrega(valor):
         dt = datetime.fromisoformat(valor)
     except (ValueError, TypeError):
         return None
-    return dt.replace(tzinfo=None) if dt.tzinfo else dt
+    if dt.tzinfo:
+        import pytz
+        dt = dt.astimezone(pytz.timezone('America/Guayaquil')).replace(tzinfo=None)
+    return dt
 
 
 
@@ -2418,6 +2483,7 @@ def reporte_stock():
             agrupado[mov.material_id] = {
                 'material': mov.material.nombre if mov.material else 'Material eliminado',
                 'sku': mov.material.codigo_barras if mov.material else 'N/A',
+                'unidad_medida': mov.material.unidad_medida if mov.material else None,
                 'total_entradas': 0,
                 'total_salidas': 0,
                 'stock_resultante': mov.material.stock_actual if mov.material else 0,
@@ -2472,15 +2538,18 @@ def _estado_item_label(valor):
 @login_required
 def reporte_pedidos_pdf():
     data = request.get_json() or {}
+    for campo in ('desde', 'hasta', 'cliente', 'estado'):
+        if data.get(campo) is not None and not isinstance(data[campo], str):
+            return jsonify({'error': f'{campo} debe ser texto'}), 400
     desde_str = (data.get('desde') or '').strip()
     hasta_str = (data.get('hasta') or '').strip()
     try:
         desde = datetime.fromisoformat(desde_str) if desde_str else None
         hasta = datetime.fromisoformat(hasta_str) if hasta_str else None
-    except ValueError:
+        if hasta and hasta.time() == datetime.min.time():
+            hasta = hasta + timedelta(days=1)
+    except (ValueError, OverflowError):
         return jsonify({'error': 'Formato de fecha inválido — usar ISO (YYYY-MM-DD)'}), 400
-    if hasta and hasta.time() == datetime.min.time():
-        hasta = hasta + timedelta(days=1)
 
     cliente = (data.get('cliente') or '').strip()
     estado = (data.get('estado') or '').strip()
@@ -2724,7 +2793,7 @@ def _calcular_tiempo_pedido_minutos(pedido):
     """Calcula el tiempo total estimado en minutos para producir un pedido,
     y detecta si requiere una máquina exclusiva (ej. Mesp)."""
     minutos_totales = 0.0
-    maquina_requerida = None
+    maquinas_requeridas = set()
 
     for item in pedido.items:
         codigo = (item.codigo or '').strip().upper()
@@ -2734,18 +2803,28 @@ def _calcular_tiempo_pedido_minutos(pedido):
         cat = _catalogo_item(item, pedido.cliente)
 
         t_base = cat.tiempo_base_minutos if (cat and cat.tiempo_base_minutos is not None) else 0.05
+        if not math.isfinite(t_base) or t_base <= 0:
+            raise ValueError(f'Pedido #ORD-{pedido.id}: tiempo de producción inválido para {codigo}')
         # Tiempo por ítem = cantidad * tiempo_base_minutos
         tiempo_item = cant * t_base
         minutos_totales += tiempo_item
 
         # Máquina requerida
         if codigo == '90006718':
-            maquina_requerida = 'Mesp'
-        elif cat and maquina_requerida != 'Mesp':
+            maquinas_requeridas.add('Mesp')
+        elif cat:
             if cat.maquina_requerida:
-                maquina_requerida = cat.maquina_requerida
+                maquinas_requeridas.add(cat.maquina_requerida)
             elif cat.tipo_codigo == 'especial':
-                maquina_requerida = 'Mesp'
+                maquinas_requeridas.add('Mesp')
+
+    if len(maquinas_requeridas) > 1:
+        raise ValueError(f'Pedido #ORD-{pedido.id}: restricciones de máquinas exclusivas incompatibles ({", ".join(sorted(maquinas_requeridas))})')
+    maquina_requerida = next(iter(maquinas_requeridas), None)
+    if maquina_requerida and maquina_requerida not in ('M1', 'M2', 'Mesp'):
+        raise ValueError(f'Pedido #ORD-{pedido.id}: máquina requerida inválida')
+    if not math.isfinite(minutos_totales):
+        raise ValueError(f'Pedido #ORD-{pedido.id}: duración fuera del rango permitido')
 
     # Margen mínimo de preparación/set-up: 10 minutos
     minutos_totales = max(10.0, minutos_totales)
@@ -2767,7 +2846,11 @@ def get_planificador():
 
     for p in pedidos_activos:
         p_dict = pedido_a_dict(p)
-        minutos, maq_req = _calcular_tiempo_pedido_minutos(p)
+        try:
+            minutos, maq_req = _calcular_tiempo_pedido_minutos(p)
+        except (ValueError, OverflowError) as exc:
+            minutos, maq_req = None, None
+            p_dict['error_planificacion'] = str(exc)
         p_dict['minutos_calculados'] = minutos
         p_dict['maquina_requerida_fija'] = maq_req
 
@@ -2800,14 +2883,25 @@ def auto_asignar_produccion():
     if pedidos_ids is not None:
         if not isinstance(pedidos_ids, list) or not pedidos_ids:
             return jsonify({'error': 'Selecciona al menos un pedido'}), 400
+        try:
+            pedidos_ids = sorted(set(_entero_consumo(valor, 'pedidos_ids') for valor in pedidos_ids))
+        except ValueError as exc:
+            return jsonify({'error': str(exc)}), 400
         pedidos_en_cola = Pedido.query.filter(
-            Pedido.id.in_(pedidos_ids),
-            Pedido.estado == 'En Cola'
-        ).all()
+            Pedido.id.in_(pedidos_ids)
+        ).order_by(Pedido.id).all()
+        no_encontrados = sorted(set(pedidos_ids) - {p.id for p in pedidos_en_cola})
+        if no_encontrados:
+            return jsonify({'error': 'No están disponibles todos los pedidos seleccionados.',
+                            'pedidos_no_encontrados': no_encontrados}), 404
+        fuera_cola = [p.id for p in pedidos_en_cola if p.estado != 'En Cola']
+        if fuera_cola:
+            return jsonify({'error': 'Selecciona únicamente pedidos En Cola; actualiza la selección.',
+                            'pedidos_fuera_cola': fuera_cola}), 400
     else:
         pedidos_en_cola = Pedido.query.filter(
             Pedido.estado == 'En Cola'
-        ).all()
+        ).order_by(Pedido.id).all()
 
     if not pedidos_en_cola:
         return jsonify({'error': 'No hay pedidos en cola para asignar'}), 400
@@ -2831,35 +2925,38 @@ def auto_asignar_produccion():
     restringidos = []
     flexibles = []
 
-    for p in pedidos_en_cola:
-        minutos, maq_req = _calcular_tiempo_pedido_minutos(p)
-        p.minutos_estimados = minutos
-        if maq_req:
-            restringidos.append((p, minutos, maq_req))
-        else:
-            flexibles.append((p, minutos))
+    try:
+        for p in pedidos_en_cola:
+            minutos, maq_req = _calcular_tiempo_pedido_minutos(p)
+            if maq_req:
+                restringidos.append((p, minutos, maq_req))
+            else:
+                flexibles.append((p, minutos))
 
-    # 3. Asignar pedidos restringidos a su máquina requerida (ej. Mesp)
-    for p, duracion, maq in restringidos:
-        maq_valida = maq if maq in ready_times else 'Mesp'
-        inicio = ready_times[maq_valida]
-        fin = inicio + timedelta(minutes=duracion)
-        p.maquina_asignada = maq_valida
+        # Validar el horizonte completo antes de modificar cualquier reserva.
+        # Conserva el algoritmo LPT y el margen mínimo originales.
+        propuestas = []
+        for p, duracion, maq in restringidos:
+            inicio = ready_times[maq]
+            fin = inicio + timedelta(minutes=duracion)
+            propuestas.append((p, maq, inicio, fin, duracion))
+            ready_times[maq] = fin
+        flexibles.sort(key=lambda x: x[1], reverse=True)
+        for p, duracion in flexibles:
+            maq = min(('M1', 'M2'), key=lambda m: ready_times[m])
+            inicio = ready_times[maq]
+            fin = inicio + timedelta(minutes=duracion)
+            propuestas.append((p, maq, inicio, fin, duracion))
+            ready_times[maq] = fin
+    except (ValueError, OverflowError) as exc:
+        db.session.rollback()
+        return jsonify({'error': f'No se puede planificar la selección: {exc}'}), 400
+
+    for p, maq, inicio, fin, duracion in propuestas:
+        p.maquina_asignada = maq
+        p.minutos_estimados = duracion
         p.fecha_inicio_produccion = inicio
         p.fecha_fin_produccion = fin
-        ready_times[maq_valida] = fin
-
-    # 4. Asignación óptima de pedidos flexibles entre M1 y M2 (LPT Makespan Minimization)
-    flexibles.sort(key=lambda x: x[1], reverse=True)
-    maq_flexibles = ['M1', 'M2']
-    for p, duracion in flexibles:
-        mejor_maq = min(maq_flexibles, key=lambda m: ready_times[m])
-        inicio = ready_times[mejor_maq]
-        fin = inicio + timedelta(minutes=duracion)
-        p.maquina_asignada = mejor_maq
-        p.fecha_inicio_produccion = inicio
-        p.fecha_fin_produccion = fin
-        ready_times[mejor_maq] = fin
 
     db.session.commit()
 
@@ -2914,7 +3011,10 @@ def asignar_manual_produccion():
             'pedido': pedido_a_dict(pedido),
         })
 
-    minutos_calc, maq_req = _calcular_tiempo_pedido_minutos(pedido)
+    try:
+        minutos_calc, maq_req = _calcular_tiempo_pedido_minutos(pedido)
+    except (ValueError, OverflowError) as exc:
+        return jsonify({'error': str(exc)}), 400
     if maq_req and maq_req != maquina:
         return jsonify({
             'error': f'Restricción técnica: Este pedido contiene códigos especiales (ej. 90006718) que requieren exclusivamente la máquina {maq_req}.'

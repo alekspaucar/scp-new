@@ -23,7 +23,7 @@
 }
 
 @layer components {
-  .app-shell { @apply min-h-screen; background: radial-gradient(circle at 8% 5%, rgba(195,222,255,.7), transparent 31%), radial-gradient(circle at 90% 15%, rgba(226,209,255,.62), transparent 28%), linear-gradient(135deg, #f6f9fd 0%, #edf2f9 100%); }
+  .app-shell { @apply min-h-screen; background: radial-gradient(circle at 8% 5%, rgba(195,222,255,.22), transparent 31%), radial-gradient(circle at 90% 15%, rgba(226,209,255,.16), transparent 28%), linear-gradient(135deg, #f6f9fd 0%, #edf2f9 100%); }
   .sidebar { @apply fixed inset-y-0 left-0 z-20 flex w-[244px] flex-col border-r border-white/70 bg-white/45 backdrop-blur-2xl transition-all duration-300; box-shadow: 8px 0 32px rgba(112,130,165,.07); }
   .sidebar.collapsed { @apply w-[78px]; }
   .brand { @apply flex h-[88px] items-center gap-3 border-b border-white/65 px-6; }
@@ -321,8 +321,10 @@ body.theme-dark .confirmation-icon.danger { background: #492c40; color: #ffc2d3;
 }
 @media (max-width: 640px) {
   .page-content { padding: 24px 14px; }
+  .view-stack { gap: 20px; }
+  .view-heading { flex-direction: row; flex-wrap: wrap; align-items: center; gap: 12px; }
   .view-heading h2 { font-size: 25px; }
-  .heading-actions { align-self: stretch; flex-wrap: wrap; }
+  .heading-actions { align-self: center; flex-wrap: wrap; }
   .soft-button, .primary-button, .danger-button { min-height: 44px; font-size: 12px; padding: 11px 13px; }
   .app-shell input:not([type=checkbox]):not([type=radio]):not([type=file]), .app-shell select, .app-shell textarea,
   .dialog-shell input:not([type=checkbox]):not([type=radio]):not([type=file]), .dialog-shell select, .dialog-shell textarea { font-size: 16px; }

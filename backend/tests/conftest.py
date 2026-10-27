@@ -20,6 +20,10 @@ def storage(monkeypatch):
     for key in list(os.environ):
         if key.startswith('SGP_NUEVA_'):
             monkeypatch.delenv(key)
+    # Render variables from the developer shell must not alter disposable
+    # local test installations.
+    for key in ('INSTALLATION_TOKEN', 'RENDER', 'IS_PULL_REQUEST'):
+        monkeypatch.delenv(key, raising=False)
     monkeypatch.setenv('SGP_NUEVA_DATABASE_URL', 'sqlite:///' + str(instance / 'test.sqlite3'))
     monkeypatch.setenv('SGP_NUEVA_UPLOAD_FOLDER', str(uploads))
     # Prevent old code from creating a database elsewhere during RED.

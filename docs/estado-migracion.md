@@ -1,6 +1,14 @@
 # Estado de migración — SGP nueva interfaz
 
-Fecha de trabajo: 2026-10-24. Diseño aprobado por el usuario en este chat.
+## Estado actual — 2026-10-27
+
+Revisión integral de funciones y contratos completada; ver `2026-10-27-cobertura-funcional.md` y las cuatro matrices `auditoria-*-20261027.md`. Se completaron diferencias de captura/referencias, gestión por lote, permisos, enlaces y consumos/reportes. Planificador más compacto, asignación al siguiente hueco y cronología diaria acotada. Las confirmaciones de ítem rechazan revisiones antiguas; cambiar de cuenta descarta borradores y detiene continuaciones pendientes.
+
+Evidencia nueva: **227 pruebas backend, 103 de cliente, 18 Playwright y recorrido de 18 comprobaciones aprobados**, sin errores JavaScript. Compilación/tipos y revisión visual de los cuatro PDFs y de escritorio/móvil aprobadas. Las 15 advertencias SQLAlchemy son de uso de API antigua. Datos reales nuevos y clave de sesiones conservados byte por byte; copia previa propia antes de integrar. Los 201 archivos del principal siguen intactos. Servicio propio iniciado y comprobado en localhost:3000/API5101 con la cuenta existente, sin mutaciones de verificación sobre sus datos. AQL formal, Compras, Zebra y validación física siguen pendientes.
+
+## Historial de la entrega inicial — 2026-10-24
+
+Las cifras y el estado de primera cuenta descritos a continuación corresponden a esa fecha; no sustituyen la revisión actual. Diseño aprobado por el usuario en este chat.
 
 ## Cobertura
 
