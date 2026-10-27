@@ -83,6 +83,7 @@ def create_app():
         _migrar_catalogo_constraint()
         _migrar_pedido_planificacion()
         _crear_admin_render()
+        _cargar_demostracion_render()
 
     return app
 
@@ -111,6 +112,22 @@ def _crear_admin_render():
     except OperationalError:
         db.session.rollback()
         raise
+
+
+def _cargar_demostracion_render():
+    """Populate a fresh Render database with idempotent DEMO records.
+
+    Render's free filesystem can be recreated after a restart. The visible
+    sample data keeps every area of the application usable without copying
+    any real customers, orders, users, or attachments.
+    """
+    if (os.environ.get('RENDER') != 'true'
+            or os.environ.get('IS_PULL_REQUEST') == 'true'
+            or not os.environ.get('INSTALLATION_TOKEN')):
+        return
+    from seed_demo import seed_demo, seed_extended
+    seed_demo()
+    seed_extended()
 
 
 def _migrar_revisiones():

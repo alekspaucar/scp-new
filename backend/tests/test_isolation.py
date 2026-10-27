@@ -31,7 +31,7 @@ def test_render_bootstrap_creates_requested_admin_once(storage, monkeypatch):
     monkeypatch.setenv('INSTALLATION_TOKEN', 'render-installation-token')
     from app import create_app
     from app.extensions import db
-    from app.models import Usuario
+    from app.models import Cliente, Material, Pedido, ProductoCatalogo, Usuario
 
     app = create_app()
     with app.app_context():
@@ -39,12 +39,17 @@ def test_render_bootstrap_creates_requested_admin_once(storage, monkeypatch):
         assert user.username == 'admin'
         assert user.rol == 'admin'
         assert user.check_password('12345')
+        assert Cliente.query.count() == 6
+        assert Material.query.count() == 12
+        assert ProductoCatalogo.query.count() == 14
+        assert Pedido.query.count() == 18
         db.session.remove()
         db.engine.dispose()
 
     restarted = create_app()
     with restarted.app_context():
         assert Usuario.query.count() == 1
+        assert Pedido.query.count() == 18
         db.session.remove()
         db.engine.dispose()
 

@@ -27,6 +27,12 @@ configurado, crea una única cuenta administradora al arrancar: usuario `admin`
 y contraseña `12345`. La cuenta no se vuelve a crear si ya existe una base de
 datos. Cambia esa contraseña desde Configuración → Usuarios al primer ingreso.
 
+En ese mismo arranque, Render carga clientes, productos, materiales,
+movimientos y pedidos ficticios identificados como `DEMO`. La carga es
+repetible: no duplica registros ni copia datos reales. Así, si el servicio
+gratuito reinicia con una base vacía, todas las pantallas vuelven a tener datos
+para demostrar el sistema.
+
 El mismo comando inicia frontend en `127.0.0.1:3000` y API en `127.0.0.1:5101`. `Ctrl+C` detiene ambos procesos. Para iniciarlos por separado: `npm run dev:api` y `npm run dev:web`.
 
 Para ejecutar la versión compilada:
